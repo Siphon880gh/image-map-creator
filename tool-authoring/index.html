@@ -24,6 +24,7 @@
         // Configurer: Configure here
         var startingMode = STARTING.NO_SPLASH_SCREEN;
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 </head>
 
 <body>
@@ -70,16 +71,36 @@
                     cursor: pointer;  /* To indicate the image is clickable */
                 }
 
-                .thumbnail-container .close {
+                .thumbnail-container .close-icon {
                     position: absolute;
                     top: 5px;
                     right: 5px;
                     background-color: rgba(255, 255, 255, 0.8);
                     border-radius: 50%;
                     cursor: pointer;
-                    padding: 0 6px;
                     font-weight: bold;
                     z-index: 10;
+                    width: 25px;
+                    height: 25px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+                .thumbnail-container .caption-icon {
+                    position: absolute;
+                    top: 38px;
+                    right: 5px;
+                    background-color: rgba(255, 255, 255, 0.8);
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-weight: bold;
+                    z-index: 10;
+                    font-size: 90%;
+                    width: 25px;
+                    height: 25px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
                 }
 
                 .thumbnail-caption.overlay {
@@ -96,7 +117,7 @@
                     white-space: nowrap;
                     text-overflow: ellipsis;
                     z-index: 9;
-                    padding: 20px 0;
+                    padding: 22px 0;
                 }
                 .thumbnail-caption:empty {
                     display: none;
@@ -170,12 +191,16 @@
               div.innerHTML = `
                 <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
                 <img class="thumbnail" src="${picFile.result}" title="${picFile?.name?picFile.name:'Screen'}"/>
-                <span class="close" title="Remove">&times;</span>
+                <span class="close-icon" title="Remove">&times;</span>
+                <span class="caption-icon" title="Caption">&copy;</span>
               `;
               output.appendChild(div);
       
-              // Add click event to the image for caption
-              div.querySelector(".thumbnail").addEventListener("click", function() {
+              // Add click event for canceling screen
+              document.body.querySelector(".close-icon").addEventListener("click", cancelAuthorScreen);
+
+              // Add click event for caption
+              document.body.querySelector(".caption-icon").addEventListener("click", function() {
                 const caption = prompt("Want to add instructions?");
                 const captionDiv = document.querySelector(".thumbnail-caption");
                 if (caption) {
@@ -186,8 +211,6 @@
                     captionDiv.classList.add("hidden");
                 }
               });
-      
-              div.querySelector(".close").addEventListener("click", cancelAuthorScreen);
             });
 
             // Triggers load event
@@ -212,7 +235,7 @@
         });
 
         function outputHTML() {
-            //TODO: Erase `<span class="close" title="Remove">×</span>`
+            //TODO: Erase `<span class="close-icon" title="Remove">×</span>`
             var style = document.createElement("style");
             style.innerHTML = document.getElementById("output-2").innerHTML;
 
@@ -225,6 +248,84 @@
         } // outputHTML
 
     </script>
+
+
+<button id="finishPolygon">Finish Polygon</button>
+<script>
+let canvas = new fabric.Canvas('canvas');
+let polygonPoints = [];
+let isDrawing = false;
+
+document.getElementById('files').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function (f) {
+        fabric.Image.fromURL(f.target.result, function (img) {
+            // Clear existing polygons or any other objects from the canvas
+            canvas.getObjects().forEach(function(object) {
+                canvas.remove(object);
+            });
+            // Reset the polygonPoints array
+            polygonPoints = [];
+            isDrawing = false;
+
+            // Set the new background image
+            img.set({ left: 0, top: 0, scaleX: (canvas.width / img.width), scaleY: (canvas.height / img.height) });
+            canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {});
+        });
+    };
+
+    if (file) {
+        reader.readAsDataURL(file);
+    }
+});
+
+canvas.on('mouse:down', function(options) {
+    if (!isDrawing) {
+        isDrawing = true;
+        polygonPoints.push(options.pointer);
+    } else {
+        polygonPoints.push(options.pointer);
+        canvas.renderAll();
+    }
+});
+
+canvas.on('mouse:up', function() {
+    if (polygonPoints.length > 1) {
+        const line = new fabric.Line([polygonPoints[polygonPoints.length - 2].x, polygonPoints[polygonPoints.length - 2].y, polygonPoints[polygonPoints.length - 1].x, polygonPoints[polygonPoints.length - 1].y], {
+            stroke: 'red',
+            strokeWidth: 2
+        });
+        canvas.add(line);
+    }
+});
+
+document.getElementById('finishPolygon').addEventListener('click', function() {
+    if (polygonPoints.length > 2) {
+        const polygon = new fabric.Polygon(polygonPoints, {
+            fill: 'rgba(255,0,0,0.3)',
+            stroke: 'red',
+            strokeWidth: 2
+        });
+        canvas.add(polygon);
+
+        // Extract coordinates for image map
+        const coordsArray = [];
+        for (let point of polygonPoints) {
+            coordsArray.push(Math.round(point.x) + ',' + Math.round(point.y));
+        }
+
+        // Generate the <area> element for the image map and log it to the console
+        const areaElement = `<area shape="poly" coords="${coordsArray.join(', ')}" href="#" alt="Descriptive text">`;
+        console.log(areaElement);
+
+        polygonPoints = [];
+        isDrawing = false;
+    }
+});
+
+</script>
 
 </body>
 
