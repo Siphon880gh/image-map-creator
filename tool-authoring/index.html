@@ -22,7 +22,7 @@
         }
 
         // Configurer: Configure here
-        var startingMode = STARTING.SPLASH_SCREEN;
+        var startingMode = STARTING.NO_SPLASH_SCREEN;
     </script>
 </head>
 
@@ -96,6 +96,9 @@
                     z-index: 9;
                     padding: 20px 0;
                 }
+                .thumbnail-caption:empty {
+                    display: none;
+                }
         </style>
         <output id="result"></output>
     </div>
@@ -122,11 +125,14 @@
         }
 
         function cancelAuthorScreen() {
+            document.querySelector("#files").value = ""
             const output = document.querySelector("#result");
             if (confirm("Cancel screen?")) {
                 output.removeChild(div);
                 loadUploadScreen();
             }
+            const captionDiv = document.querySelector(".thumbnail-caption");
+            captionDiv.classList.remove("hidden");
         }
 
         function loadAuthorScreen() {
@@ -147,6 +153,7 @@
 
     <script>
         document.querySelector("#files").addEventListener("change", (e) => {
+        if(document.querySelector("#files").value === "") return;
         if (window.File && window.FileReader && window.FileList && window.Blob) {
             loadAuthorScreen();
           const files = e.target.files;
@@ -159,7 +166,8 @@
               window.div = document.createElement("div");
               div.className = "thumbnail-container";
               div.innerHTML = `
-                <img class="thumbnail" src="${picFile.result}" title="${picFile.name}"/>
+                <div class="thumbnail-caption"></div>
+                <img class="thumbnail" src="${picFile.result}" title="${picFile?.name?picFile.name:'Screen'}"/>
                 <span class="close" title="Remove">&times;</span>
               `;
               output.appendChild(div);
@@ -167,17 +175,13 @@
               // Add click event to the image for caption
               div.querySelector(".thumbnail").addEventListener("click", function() {
                 const caption = prompt("Want to add instructions?");
-                document.querySelector(".thumbnail-caption")?.remove();
+                const captionDiv = document.querySelector(".thumbnail-caption");
                 if (caption) {
-                  const captionDiv = document.createElement("div");
-                  captionDiv.className = "thumbnail-caption";
-                  captionDiv.innerText = caption;
-                  div.appendChild(captionDiv);
+                    captionDiv.innerText = caption;
+                    captionDiv.classList.remove("hidden");
                 } else if (caption === "") {
-                  const existingCaption = div.querySelector(".thumbnail-caption");
-                  if (existingCaption) {
-                    div.removeChild(existingCaption);
-                  }
+                    captionDiv.innerText = "";
+                    captionDiv.classList.add("hidden");
                 }
               });
       
@@ -194,13 +198,18 @@
     </script>
 
     <script>
+        const haveShapes = false;
         document.addEventListener('keydown', function(event) {
             // Using the `key` property (preferred way)
             if (event?.key === 'Escape' || event?.key === 'Esc' || event?.keyCode === 27) {
-                // alert('Escape key pressed!');
-                cancelAuthorScreen();
+                if(!haveShapes)
+                    cancelAuthorScreen();
             }
         });
+
+        function outputHTML() {
+            //TODO: Erase `<span class="close" title="Remove">×</span>`
+        }
 
     </script>
 </body>
