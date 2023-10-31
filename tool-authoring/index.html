@@ -82,8 +82,10 @@
                     z-index: 10;
                 }
 
-                .thumbnail-caption {
+                .thumbnail-caption.overlay {
                     position: absolute;
+                }
+                .thumbnail-caption {
                     top: 0;
                     width: 100%;
                     background-color: rgba(0, 0, 0, 0.8); /* semi-transparent black */
@@ -166,7 +168,7 @@
               window.div = document.createElement("div");
               div.className = "thumbnail-container";
               div.innerHTML = `
-                <div class="thumbnail-caption"></div>
+                <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
                 <img class="thumbnail" src="${picFile.result}" title="${picFile?.name?picFile.name:'Screen'}"/>
                 <span class="close" title="Remove">&times;</span>
               `;
@@ -204,12 +206,23 @@
             if (event?.key === 'Escape' || event?.key === 'Esc' || event?.keyCode === 27) {
                 if(!haveShapes)
                     cancelAuthorScreen();
+            } else if (event?.key === 'Enter' || event?.keyCode === 13) {
+                outputHTML();
             }
         });
 
         function outputHTML() {
             //TODO: Erase `<span class="close" title="Remove">×</span>`
-        }
+            var style = document.createElement("style");
+            style.innerHTML = document.getElementById("output-2").innerHTML;
+
+            var result = document.createElement("div");
+            result.innerHTML = document.getElementById("result").innerHTML;
+            result.querySelector(".thumbnail-caption").removeAttribute("onclick");
+
+            console.log({style, result});
+            // console.log({style:style.innerHTML, result:result.innerHTML});
+        } // outputHTML
 
     </script>
 
