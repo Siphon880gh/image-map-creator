@@ -11,7 +11,8 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
     <!-- Assets -->
-    <link rel="stylesheet" href="assets/upload.css">
+    <link rel="stylesheet" href="assets/css/upload.css">
+    <link rel="stylesheet" href="assets/css/fabric-plug.css">
 
     <!-- Configuration -->
     <script>
@@ -58,20 +59,26 @@
         </div>
     </div>
 
-    <div id="author-screen" class="bg-gray-100 h-screen flex justify-center relative hidden">
+    <div id="author-screen" class="bg-gray-100 h-screen flex flex-col flex-start relative">
         <style id="output-2">
-              .thumbnail-container {
+              /* .thumbnail-container {
                     position: relative;
                     display: inline-block;
-                }
+                    width: 100%;
+                } */
 
-                .thumbnail {
+                /* .thumbnail {
                     width: 100%;
                     height: auto;
-                    cursor: pointer;  /* To indicate the image is clickable */
+                } */
+
+                #canvas-tools {
+                    display: block;
+                    width: 100%;
+                    height: auto;
                 }
 
-                .thumbnail-container .close-icon {
+                .close-icon {
                     position: absolute;
                     top: 5px;
                     right: 5px;
@@ -86,7 +93,7 @@
                     justify-content: center;
                     align-items: center;
                 }
-                .thumbnail-container .caption-icon {
+                .caption-icon {
                     position: absolute;
                     top: 38px;
                     right: 5px;
@@ -113,7 +120,7 @@
                     color: white;
                     padding: 5px;
                     text-align: center;
-                    overflow: hidden;
+                    overflow: visible;
                     white-space: nowrap;
                     text-overflow: ellipsis;
                     z-index: 9;
@@ -123,8 +130,17 @@
                     display: none;
                 }
         </style>
-        <output id="result"></output>
-    </div>
+        <!-- <output id="result"></output> -->
+
+        <span class="close-icon" title="Remove">&times;</span>
+        <span class="caption-icon" title="Caption">&copy;</span>
+        
+        <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
+        <canvas id="canvas-tools" class="canvas" width="500" height="500"></canvas>
+
+        <button id="finishPolygon">Finish Polygon</button>
+        <button id="getOutput">Get Output</button>
+    </div> <!-- author-screen -->
 
     <script>
         function loadSplashScreen(cb) {
@@ -151,7 +167,8 @@
             document.querySelector("#files").value = ""
             const output = document.querySelector("#result");
             if (confirm("Cancel screen?")) {
-                output.removeChild(div);
+                // output.removeChild(div);
+                resetCanvas("canvas-tools");
                 loadUploadScreen();
             }
             const captionDiv = document.querySelector(".thumbnail-caption");
@@ -175,6 +192,51 @@
     </script>
 
     <script>
+        function resetCanvas(canvasId) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error('Canvas with ID', canvasId, 'not found.');
+                return;
+            }
+
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }  // resetCanvas
+        function setBackgroundImageForCanvas(canvasId, imagePath) {
+            // Select the canvas and its context
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error('Canvas with ID', canvasId, 'not found.');
+                return;
+            }
+
+            var ctx = canvas.getContext('2d');
+
+            // Create a new image object
+            var img = new Image();
+
+            // When the image has loaded, draw it to the canvas
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+
+                // When the image has loaded, adjust canvas size and draw it to the canvas
+            img.onload = function() {
+                // Adjust canvas dimensions to match image resolution
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+
+            // Set the source of the image
+            img.src = imagePath;
+
+
+        } // setBackgroundImageForCanvas
+
+
+
         document.querySelector("#files").addEventListener("change", (e) => {
         if(document.querySelector("#files").value === "") return;
         if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -182,19 +244,23 @@
           const files = e.target.files;
           const output = document.querySelector("#result");
           for (let i = 0; i < files.length; i++) {
+            if(i>0) break; // Only support one screen per edit
+
             if (!files[i].type.match("image")) continue;
             const picReader = new FileReader();
+
+            // Triggers when file is loaded
             picReader.addEventListener("load", function (event) {
               const picFile = event.target;
-              window.div = document.createElement("div");
-              div.className = "thumbnail-container";
-              div.innerHTML = `
-                <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
-                <img class="thumbnail" src="${picFile.result}" title="${picFile?.name?picFile.name:'Screen'}"/>
-                <span class="close-icon" title="Remove">&times;</span>
-                <span class="caption-icon" title="Caption">&copy;</span>
-              `;
-              output.appendChild(div);
+            //   window.div = document.createElement("div");
+            //   div.className = "thumbnail-container";
+            //   div.innerHTML = `
+            //     <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
+            //     <img class="thumbnail" src="${picFile.result}" title="${picFile?.name?picFile.name:'Screen'}"/>
+            //     <span class="close-icon" title="Remove">&times;</span>
+            //     <span class="caption-icon" title="Caption">&copy;</span>
+            //   `;
+            //   output.appendChild(div);
       
               // Add click event for canceling screen
               document.body.querySelector(".close-icon").addEventListener("click", cancelAuthorScreen);
@@ -211,7 +277,9 @@
                     captionDiv.classList.add("hidden");
                 }
               });
-            });
+              setBackgroundImageForCanvas("canvas-tools", picFile.result)
+
+            }); // Pic upload loads
 
             // Triggers load event
             picReader.readAsDataURL(files[i]);
@@ -234,98 +302,53 @@
             }
         });
 
+        function getCanvasAsBase64URL(canvasId, format = 'image/png', quality = 1.0) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error('Canvas with ID', canvasId, 'not found.');
+                return null;
+            }
+
+            return canvas.toDataURL(format, quality);
+        }
+
+        // Example usage:
+        // var base64URL = getCanvasAsBase64URL('canvas-tools');
+        // console.log(base64URL);
+
+
         function outputHTML() {
             //TODO: Erase `<span class="close-icon" title="Remove">×</span>`
             var style = document.createElement("style");
             style.innerHTML = document.getElementById("output-2").innerHTML;
 
-            var result = document.createElement("div");
-            result.innerHTML = document.getElementById("result").innerHTML;
-            result.querySelector(".thumbnail-caption").removeAttribute("onclick");
+            // var result = document.createElement("div");
+            // result.innerHTML = document.getElementById("result").innerHTML;
+            document.body.querySelector(".thumbnail-caption").removeAttribute("onclick");
 
+
+            var base64URL = getCanvasAsBase64URL('canvas-tools');
+            console.log(base64URL);
+            var img = document.createElement("img")
+            img.src = base64URL;
+            img.style.width = "100%";
+            img.style.height = "auto";
+            var result = img;
+
+            
             console.log({style, result});
+            // document.body.innerHTML = "";
+            // document.body.append(result);
             // console.log({style:style.innerHTML, result:result.innerHTML});
         } // outputHTML
+
+        document.getElementById("getOutput").addEventListener("click", outputHTML);
 
     </script>
 
 
-<button id="finishPolygon">Finish Polygon</button>
-<script>
-let canvas = new fabric.Canvas('canvas');
-let polygonPoints = [];
-let isDrawing = false;
 
-document.getElementById('files').addEventListener('change', function (e) {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = function (f) {
-        fabric.Image.fromURL(f.target.result, function (img) {
-            // Clear existing polygons or any other objects from the canvas
-            canvas.getObjects().forEach(function(object) {
-                canvas.remove(object);
-            });
-            // Reset the polygonPoints array
-            polygonPoints = [];
-            isDrawing = false;
-
-            // Set the new background image
-            img.set({ left: 0, top: 0, scaleX: (canvas.width / img.width), scaleY: (canvas.height / img.height) });
-            canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {});
-        });
-    };
-
-    if (file) {
-        reader.readAsDataURL(file);
-    }
-});
-
-canvas.on('mouse:down', function(options) {
-    if (!isDrawing) {
-        isDrawing = true;
-        polygonPoints.push(options.pointer);
-    } else {
-        polygonPoints.push(options.pointer);
-        canvas.renderAll();
-    }
-});
-
-canvas.on('mouse:up', function() {
-    if (polygonPoints.length > 1) {
-        const line = new fabric.Line([polygonPoints[polygonPoints.length - 2].x, polygonPoints[polygonPoints.length - 2].y, polygonPoints[polygonPoints.length - 1].x, polygonPoints[polygonPoints.length - 1].y], {
-            stroke: 'red',
-            strokeWidth: 2
-        });
-        canvas.add(line);
-    }
-});
-
-document.getElementById('finishPolygon').addEventListener('click', function() {
-    if (polygonPoints.length > 2) {
-        const polygon = new fabric.Polygon(polygonPoints, {
-            fill: 'rgba(255,0,0,0.3)',
-            stroke: 'red',
-            strokeWidth: 2
-        });
-        canvas.add(polygon);
-
-        // Extract coordinates for image map
-        const coordsArray = [];
-        for (let point of polygonPoints) {
-            coordsArray.push(Math.round(point.x) + ',' + Math.round(point.y));
-        }
-
-        // Generate the <area> element for the image map and log it to the console
-        const areaElement = `<area shape="poly" coords="${coordsArray.join(', ')}" href="#" alt="Descriptive text">`;
-        console.log(areaElement);
-
-        polygonPoints = [];
-        isDrawing = false;
-    }
-});
-
-</script>
+<script src="assets/js/fabric-plug.js"></script>
 
 </body>
 
