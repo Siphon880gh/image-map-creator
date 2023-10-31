@@ -57,7 +57,7 @@
         </div>
     </div>
 
-    <div id="polygon-screen" class="bg-gray-100 h-screen flex justify-center relative hidden">
+    <div id="author-screen" class="bg-gray-100 h-screen flex justify-center relative hidden">
         <output id="result"></output>
     </div>
 
@@ -81,11 +81,76 @@
             document.getElementById("splash-screen").classList.add("hidden");
             document.getElementById("upload-screen").classList.remove("hidden");
         }
+
+        function cancelAuthorScreen() {
+            const output = document.querySelector("#result");
+            if (confirm("Cancel screen?")) {
+                output.removeChild(div);
+                loadUploadScreen();
+            }
+        }
+
+        function loadAuthorScreen() {
+            document.getElementById("upload-screen").classList.add("hidden");
+            document.getElementById("author-screen").classList.remove("hidden");
+        }
         
         if(startingMode === STARTING.SPLASH_SCREEN)
             loadSplashScreen(loadUploadScreen);
         else
             loadUploadScreen();
+
+        // TODO:
+        function getUserID() {
+            return "TestUser1";
+        } // getUserID
+    </script>
+
+    <script>
+        document.querySelector("#files").addEventListener("change", (e) => {
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            loadAuthorScreen();
+          const files = e.target.files;
+          const output = document.querySelector("#result");
+          for (let i = 0; i < files.length; i++) {
+            if (!files[i].type.match("image")) continue;
+            const picReader = new FileReader();
+            picReader.addEventListener("load", function (event) {
+              const picFile = event.target;
+              window.div = document.createElement("div");
+              div.className = "thumbnail-container";
+              div.innerHTML = `
+                <img class="thumbnail" src="${picFile.result}" title="${picFile.name}"/>
+                <span class="close" title="Remove">&times;</span>
+              `;
+              output.appendChild(div);
+      
+              // Add click event to the image for caption
+              div.querySelector(".thumbnail").addEventListener("click", function() {
+                const caption = prompt("Want to add instructions?");
+                if (caption) {
+                  const captionDiv = document.createElement("div");
+                  captionDiv.className = "thumbnail-caption";
+                  captionDiv.innerText = caption;
+                  div.appendChild(captionDiv);
+                } else if (caption === "") {
+                  const existingCaption = div.querySelector(".thumbnail-caption");
+                  if (existingCaption) {
+                    div.removeChild(existingCaption);
+                  }
+                }
+              });
+      
+              div.querySelector(".close").addEventListener("click", cancelAuthorScreen);
+            });
+
+            // Triggers load event
+            picReader.readAsDataURL(files[i]);
+          }
+        } else {
+          alert("Your browser does not support File API");
+        }
+      });
     </script>
 </body>
 

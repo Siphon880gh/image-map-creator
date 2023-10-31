@@ -11,7 +11,8 @@
   }
 
   .thumbnail {
-    height: 192px;
+    width: 100%;
+    height: auto;
     cursor: pointer;  /* To indicate the image is clickable */
   }
 
@@ -22,14 +23,14 @@
     background-color: rgba(255, 255, 255, 0.8);
     border-radius: 50%;
     cursor: pointer;
-    padding: 2px 6px;
+    padding: 0 6px;
     font-weight: bold;
     z-index: 10;
   }
 
   .thumbnail-caption {
     position: absolute;
-    bottom: 0;
+    top: 0;
     width: 100%;
     background-color: rgba(0, 0, 0, 0.8); /* semi-transparent black */
     color: white;
