@@ -59,7 +59,7 @@
         </div>
     </div>
 
-    <div id="author-screen" class="bg-gray-100 h-screen flex flex-col flex-start relative">
+    <div id="author-screen" class="bg-gray-100 h-screen flex flex-col flex-start relative hidden">
         <style id="output-2">
               /* .thumbnail-container {
                     position: relative;
@@ -78,7 +78,30 @@
                     height: auto;
                 }
 
-                .close-icon {
+                #author-actions {
+                    display:flex;
+                    flex-flow: column nowrap;
+                    justify-content: flex-start;
+                    row-gap: 10px;
+                    position: absolute;
+                    top: 5px;
+                    right: 5px;
+                }
+                #author-actions >* {
+                    background-color: rgba(255, 255, 255, 0.8);
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-weight: bold;
+                    z-index: 10;
+                    width: 25px;
+                    height: 25px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 12px;
+                }
+
+                /* .close-icon {
                     position: absolute;
                     top: 5px;
                     right: 5px;
@@ -92,8 +115,8 @@
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                }
-                .caption-icon {
+                } */
+                /* .caption-icon {
                     position: absolute;
                     top: 38px;
                     right: 5px;
@@ -108,6 +131,10 @@
                     display: flex;
                     justify-content: center;
                     align-items: center;
+                } */
+
+                .output-icon {
+                    font-size: 9px !important;
                 }
 
                 .thumbnail-caption.overlay {
@@ -132,14 +159,24 @@
         </style>
         <!-- <output id="result"></output> -->
 
-        <span class="close-icon" title="Remove">&times;</span>
-        <span class="caption-icon" title="Caption">&copy;</span>
+        <div id="author-actions">
+            <span class="close-icon" title="Cancel screen button">&times;</span>
+            <span class="caption-icon" title="Add caption button">&copy;</span>
+            <span class="polygon-icon" title="Create region button">&#9632;</span>
+            <!-- 
+                Triangle: ▲ (&#9650; for up-pointing triangle)
+                Square: ■ (&#9632;)
+                Circle: ● (&#9679;)
+            -->
+            <span class="output-icon" title="Get output button">&lt;/&gt;</span>
+            <!-- <span class="reposition-icon" title="Reposition button">&#x283F;</span> -->
+        </div>
         
         <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
         <canvas id="canvas-tools" class="canvas" width="500" height="500"></canvas>
 
-        <button id="finishPolygon">Finish Polygon</button>
-        <button id="getOutput">Get Output</button>
+        <!-- <button id="finishPolygon">Finish Polygon</button>
+        <button id="getOutput">Get Output</button> -->
     </div> <!-- author-screen -->
 
     <script>
@@ -160,6 +197,7 @@
         
         function loadUploadScreen() {
             document.getElementById("splash-screen").classList.add("hidden");
+            document.getElementById("author-screen").classList.add("hidden");
             document.getElementById("upload-screen").classList.remove("hidden");
         }
 
