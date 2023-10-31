@@ -12,28 +12,29 @@
             width: 100%;
             margin: 10px;
         }
-        
+
         .container {
             font-size: 100%;
         }
-        
+
         @media (min-width: 768px) {
             img {
                 width: 50%;
                 margin: 10px auto;
             }
+
             .container {
                 font-size: 150%;
             }
         }
-        
+
         #toc-toggler {
             cursor: pointer;
             position: fixed;
             top: 0;
             right: 20px;
         }
-        
+
         #toc {
             display: none;
             position: fixed;
@@ -46,73 +47,81 @@
             max-height: 100vh;
             overflow-y: scroll;
         }
-        
+
         #toc-toggler:hover #toc {
             display: block;
         }
-        
+
         #mobile-tap.active+#toc {
             display: block;
         }
-        
+
         .h2 {
             margin-left: 2ch;
         }
-        
+
         .h2::before {
             content: "•\00a0";
         }
-        
+
         .h3 {
             margin-left: 4ch;
         }
-        
+
         .h3::before {
             content: "—";
         }
-        
+
         .h4 {
             margin-left: 6ch;
         }
-        
+
         .h4::before {
             content: "➣";
         }
-        
+
         .h5 {
             margin-left: 8ch;
         }
-        
+
         .h5::before {
             content: "➨";
         }
-        
+
         .h6 {
             margin-left: 10ch;
         }
-        
+
         .h6::before {
             content: "◦\00a0";
         }
     </style>
-    <link rel="stylesheet" href="assets/vendors/no-normalizer.tailwind.min.css"/>
+    <style>
+        li {
+            margin-top: 10px;
+        }
+        li:has(>details) {
+            list-style: none;
+        }
+    </style>
+    <link rel="stylesheet" href="assets/vendors/no-normalizer.tailwind.min.css" />
 </head>
 
-<body onclick="if(!event.target.matches('#mobile-tap')) { document.querySelector('#mobile-tap').classList.remove('active'); }">
+<body
+    onclick="if(!event.target.matches('#mobile-tap')) { document.querySelector('#mobile-tap').classList.remove('active'); }">
     <div id="toc-toggler">
         <div id="mobile-tap" onclick="event.target.classList.toggle('active')">📖</div>
         <div id="toc"></div>
     </div>
-    <div class="container"></div>
-
 
     <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
     <script>
+
         function htmlTableOfContents(elNode) {
             var toc = document.getElementById("toc");
             var headings = [].slice.call(elNode.querySelectorAll('h1, h2, h3, h4, h5, h6'));
 
-            headings.forEach(function(heading, i) {
+            headings.forEach(function (heading, i) {
                 var ref = "toc" + i;
                 if (heading.hasAttribute("id"))
                     ref = heading.getAttribute("id");
@@ -131,12 +140,62 @@
                 div.appendChild(link);
                 toc.appendChild(div);
             });
-        }
+        } // htmlTableOfContents
+
+        function convertParagraphsToSpans(element) {
+            const ps = Array.from(element.querySelectorAll('p'));
+            ps.forEach(p => {
+                const span = document.createElement('span');
+                while (p.firstChild) {
+                    span.appendChild(p.firstChild);
+                }
+                p.parentNode.replaceChild(span, p);
+            });
+        } // convertParagraphsToSpans
+
+        function transformListsToDetails(element) {
+            const uls = Array.from(element.querySelectorAll('ul'));
+
+            uls.forEach(ul => {
+                const parentLi = ul.closest('li');
+                if (!parentLi) return;
+
+                const details = document.createElement('details');
+                const summary = document.createElement('summary');
+
+                while (parentLi.firstChild !== ul) {
+                    summary.appendChild(parentLi.firstChild);
+                }
+
+                parentLi.insertBefore(details, ul);
+                details.appendChild(summary);
+                details.appendChild(ul); // Move ul inside details
+            });
+        } // transformListsToDetails
+
         fetch("index.md", {
-                cache: "no-cache"
-            }).then(response => response.text())
+            cache: "no-cache"
+        }).then(response => response.text())
             .then(source => {
                 var md = window.markdownit();
+
+                const defaultRender = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+                    return self.renderToken(tokens, idx, options);
+                };
+
+                md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+                    // Add a "target" attribute
+
+                    tokens[idx].attrPush(['target', '_blank']);
+
+                    // Add a "rel" attribute to prevent potential security issues with `target="_blank"`
+
+                    tokens[idx].attrPush(['rel', 'noopener noreferrer']);
+
+                    // pass token to default renderer.
+
+                    return defaultRender(tokens, idx, options, env, self);
+                };
 
                 // Lazy editing. Single lines will count as separate lines rather than ignored in markdown
                 const doubleNewLine = (source) => {
@@ -145,10 +204,18 @@
                 source = doubleNewLine(source);
 
                 var result = md.render(source);
-                document.querySelector(".container").innerHTML = result;
-                htmlTableOfContents(document.querySelector(".container"))
+                document.body.append((()=>{
+                    const div = document.createElement("div")
+                    div.innerHTML = result;
+                    return div;
+                })());
+
+                transformListsToDetails(document.body);
+                convertParagraphsToSpans(document.body);
+                htmlTableOfContents(document.body);
             });
     </script>
+
 </body>
 
 </html>
