@@ -58,6 +58,45 @@
     </div>
 
     <div id="author-screen" class="bg-gray-100 h-screen flex justify-center relative hidden">
+        <style id="output-2">
+              .thumbnail-container {
+                    position: relative;
+                    display: inline-block;
+                }
+
+                .thumbnail {
+                    width: 100%;
+                    height: auto;
+                    cursor: pointer;  /* To indicate the image is clickable */
+                }
+
+                .thumbnail-container .close {
+                    position: absolute;
+                    top: 5px;
+                    right: 5px;
+                    background-color: rgba(255, 255, 255, 0.8);
+                    border-radius: 50%;
+                    cursor: pointer;
+                    padding: 0 6px;
+                    font-weight: bold;
+                    z-index: 10;
+                }
+
+                .thumbnail-caption {
+                    position: absolute;
+                    top: 0;
+                    width: 100%;
+                    background-color: rgba(0, 0, 0, 0.8); /* semi-transparent black */
+                    color: white;
+                    padding: 5px;
+                    text-align: center;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    z-index: 9;
+                    padding: 20px 0;
+                }
+        </style>
         <output id="result"></output>
     </div>
 
@@ -128,6 +167,7 @@
               // Add click event to the image for caption
               div.querySelector(".thumbnail").addEventListener("click", function() {
                 const caption = prompt("Want to add instructions?");
+                document.querySelector(".thumbnail-caption")?.remove();
                 if (caption) {
                   const captionDiv = document.createElement("div");
                   captionDiv.className = "thumbnail-caption";
