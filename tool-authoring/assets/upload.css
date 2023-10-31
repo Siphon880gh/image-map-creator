@@ -1,0 +1,42 @@
+#result {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .thumbnail-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .thumbnail {
+    height: 192px;
+    cursor: pointer;  /* To indicate the image is clickable */
+  }
+
+  .thumbnail-container .close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-weight: bold;
+    z-index: 10;
+  }
+
+  .thumbnail-caption {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* semi-transparent black */
+    color: white;
+    padding: 5px;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    z-index: 9;
+  }
