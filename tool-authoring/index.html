@@ -26,7 +26,47 @@
         // Configurer: Configure here
         var startingMode = STARTING.NO_SPLASH_SCREEN;
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.4.0/fabric.min.js"></script>
+    <style>
+                #canvas-tools {
+                    display: block;
+                    width: 100%;
+                    height: auto;
+                }
+
+                #author-actions {
+                    display:flex;
+                    flex-flow: column nowrap;
+                    justify-content: flex-start;
+                    row-gap: 10px;
+                    position: fixed;
+                    top: 5px;
+                    right: 5px;
+                    z-index: 9;
+                }
+                #author-actions > .icon {
+                    background-color: rgba(255, 255, 255, 0.8);
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-weight: bold;
+                    z-index: 10;
+                    width: 25px;
+                    height: 25px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 12px;
+                }
+                #polygon-icon {
+                    transition: color 200ms ease-in;
+                }
+                #polygon-icon.active {
+                    color: red;
+                }
+                #output-icon, #link-icon {
+                    font-size: 9px !important;
+                }
+
+    </style>
 </head>
 
 <body>
@@ -67,106 +107,30 @@
 
     <div id="author-screen" class="bg-gray-100 h-screen flex flex-col flex-start relative hidden">
         <style id="output-2">
-              /* .thumbnail-container {
-                    position: relative;
-                    display: inline-block;
-                    width: 100%;
-                } */
-
-                /* .thumbnail {
-                    width: 100%;
-                    height: auto;
-                } */
-
-                #canvas-tools {
-                    display: block;
-                    width: 100%;
-                    height: auto;
-                }
-
-                #author-actions {
-                    display:flex;
-                    flex-flow: column nowrap;
-                    justify-content: flex-start;
-                    row-gap: 10px;
-                    position: absolute;
-                    top: 5px;
-                    right: 5px;
-                }
-                #author-actions > .icon {
-                    background-color: rgba(255, 255, 255, 0.8);
-                    border-radius: 50%;
-                    cursor: pointer;
-                    font-weight: bold;
-                    z-index: 10;
-                    width: 25px;
-                    height: 25px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    font-size: 12px;
-                }
-
-                /* #close-icon {
-                    position: absolute;
-                    top: 5px;
-                    right: 5px;
-                    background-color: rgba(255, 255, 255, 0.8);
-                    border-radius: 50%;
-                    cursor: pointer;
-                    font-weight: bold;
-                    z-index: 10;
-                    width: 25px;
-                    height: 25px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                } */
-                /* #caption-icon {
-                    position: absolute;
-                    top: 38px;
-                    right: 5px;
-                    background-color: rgba(255, 255, 255, 0.8);
-                    border-radius: 50%;
-                    cursor: pointer;
-                    font-weight: bold;
-                    z-index: 10;
-                    font-size: 90%;
-                    width: 25px;
-                    height: 25px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                } */
-                #polygon-icon {
-                    transition: color 200ms ease-in;
-                }
-                #polygon-icon.active {
-                    color: red;
-                }
-                #output-icon, #link-icon {
-                    font-size: 9px !important;
-                }
-
-                .thumbnail-caption.overlay {
-                    position: absolute;
-                }
-                .thumbnail-caption {
-                    top: 0;
-                    width: 100%;
-                    background-color: rgba(0, 0, 0, 0.8); /* semi-transparent black */
-                    color: white;
-                    padding: 5px;
-                    text-align: center;
-                    overflow: visible;
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
-                    z-index: 9;
-                    padding: 22px 0;
-                }
-                .thumbnail-caption:empty {
-                    display: none;
-                }
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            .thumbnail-caption.overlay {
+                position: absolute;
+                background-color: rgba(0, 0, 0, 0.8); /* semi-transparent black */
+            }
+            .thumbnail-caption {
+                top: 0;
+                width: 100%;
+                background-color: rgba(0, 0, 0, 1); /* opaque black */
+                color: white;
+                padding: 5px;
+                text-align: center;
+                overflow: visible;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                z-index: 9;
+                padding: 22px 0;
+            }
+            .thumbnail-caption:empty {
+                display: none;
+            }
         </style>
         <!-- <output id="result"></output> -->
 
@@ -180,7 +144,7 @@
                 Circle: ● (&#9679;)
             -->
             <span id="link-icon" class="icon" title="Get output button"><i class="fa fa-link"></i></span>
-            <hr/>
+            <hr style="visibility:hidden"/>
             <span id="output-icon" class="icon" title="Get output button">&lt;/&gt;</span>
             <!-- <span id="reposition-icon" title="Reposition button">&#x283F;</span> -->
         </div>
@@ -306,8 +270,6 @@
 
         } // setBackgroundImageForCanvas
 
-
-
         // Add click event for canceling screen
         document.body.querySelector("#close-icon").addEventListener("click", cancelAuthorScreen);
 
@@ -316,7 +278,7 @@
         const caption = prompt("Want to add instructions?");
         const captionDiv = document.querySelector(".thumbnail-caption");
         if (caption) {
-            captionDiv.innerText = caption;
+            captionDiv.innerHTML = caption;
             captionDiv.classList.remove("hidden");
         } else if (caption === "") {
             captionDiv.innerText = "";
@@ -345,8 +307,8 @@
                 if (object.type === 'polyline') {
                     var points = object.points.map(function(point) {
                     return [
-                        point.x,
-                        point.y
+                        point.x + object.get("left"),
+                        point.y + object.get("top")
                     ];
                 });
                 regionsCoords.push(points.join("  "));
@@ -463,29 +425,65 @@
 
 
         function outputHTML() {
-            alert("To be completed... See console.")
-            //TODO: Erase `<span class="close-icon" title="Remove">×</span>`
+            var caption = document.createElement("div");
+            var isOverlay = document.querySelector(".thumbnail-caption").className.includes("overlay");
+            caption.className=`thumbnail-caption ${isOverlay?"overlay":""}`
+            // <div class="thumbnail-caption overlay"></div>
+
+            var img = document.createElement("img");
+            img.src = window.imgSrc;
+            // img.style.width = window.screenWidth + "px";
+            // img.style.height = window.screenHeight + "px";
+            img.style.width = document.getElementById("canvas-tools").width + "px";
+            img.style.height = document.getElementById("canvas-tools").height + "px";
+            img.setAttribute("usemap", "#regions");
+            img.setAttribute("alt", "Screen");
+
+
+            var map = document.createElement("map");
+            map.setAttribute("name", "regions");
+            // map>(area*N)
+            ((m)=>{
+                canvas.forEachObject(function(object) {
+                    if (object.type === 'polyline') {
+                        // [[0,0],[0,100],[100,100],[100,0],[0,0]]
+                        var points = object.points.map(function(point) {
+                            return [
+                                point.x + object.get("left"),
+                                point.y + object.get("top")
+                            ];
+                        });
+
+                        // 0,0,0,100,100,100,100,0,0,0
+                        var strCoords = points.toString();
+                        var link = object.dataLink?object.dataLink:"#";
+                        
+                        //<area shape="rect" coords="34,44,270,350" alt="Rectangle Area" href="https://example.com/rect">
+                        var areas = [];
+
+                        var area = document.createElement("area")
+                        area.setAttribute("shape", "poly");
+                        area.setAttribute("coords", strCoords); 
+                        area.setAttribute("alt", "Region");        
+                        area.setAttribute("href", link);
+                        m.append(area);
+
+                    } // canvas objects that are polyline
+                }); // canvas objects
+            })(map) // append areas to map
+
             var style = document.createElement("style");
             style.innerHTML = document.getElementById("output-2").innerHTML;
+            style.id = "output-2";
 
-            // var result = document.createElement("div");
-            // result.innerHTML = document.getElementById("result").innerHTML;
-            document.body.querySelector(".thumbnail-caption").removeAttribute("onclick");
+            var captionedImg = document.createElement("div");
+            captionedImg.style.width = window.screenWidth + "px";
+            captionedImg.style.position = "relative";
+            captionedImg.append(caption, img, map);
 
+            var newWindow = window.open("about:blank");
+            newWindow.document.body.append(style, captionedImg);
 
-            var base64URL = getCanvasAsBase64URL('canvas-tools');
-            console.log(base64URL);
-            var img = document.createElement("img")
-            img.src = base64URL;
-            img.style.width = "100%";
-            img.style.height = "auto";
-            var result = img;
-
-            
-            console.log({style, result});
-            // document.body.innerHTML = "";
-            // document.body.append(result);
-            // console.log({style:style.innerHTML, result:result.innerHTML});
         } // outputHTML
 
         document.getElementById("output-icon").addEventListener("click", outputHTML);
@@ -494,6 +492,7 @@
 
 
 <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.4.0/fabric.min.js"></script>
 <script src="assets/js/fabric-plug.js"></script>
 
 </body>

@@ -97,26 +97,49 @@ fabric.util.addListener(window,'dblclick', function(){
      document.querySelector("#polygon-icon.active")?.classList?.remove("active");
 });
 
+// canvas.on('object:selected', function(event) {
+//     var selectedObject = event.target;
+//     var object = selectedObject;
+
+//     // Check if the selected object is a Polyline
+//     if (object.type === 'polyline') {
+//         // console.log(object.points);
+//         /**
+//          * [Point, Point,...]
+//          * 
+//          * Point {x:0, y:0}
+//          */
+
+//         debugger;
+//         // Convert to universal format
+//         var points = object.points.map(function(point) {
+//             return [
+//                 // point.x + object.getWidth()/2,
+//                 // point.y + object.getHeight()/2
+//                 point.x + object.get("left"),
+//                 point.y + object.get("top")
+//             ];
+//         });
+//         console.log({points, link:object?.dataLink?object?.dataLink:false}); // [{x:0, y:0}, {x:10, y:10},...]
+//     }
+// });
+
 canvas.on('object:selected', function(event) {
-    var selectedObject = event.target;
+    var object = event.target;
 
     // Check if the selected object is a Polyline
-    if (selectedObject.type === 'polyline') {
-        // console.log(selectedObject.points);
-        /**
-         * [Point, Point,...]
-         * 
-         * Point {x:0, y:0}
-         */
-
-        // Convert to universal format
-        var points = selectedObject.points.map(function(point) {
+    if (object.type === 'polyline') {
+        var absolutePoints = object.points.map(function(point) {
             return [
-                point.x,
-                point.y
+                point.x + object.left,
+                point.y + object.top
             ];
         });
-        console.log({points, link:selectedObject?.dataLink?selectedObject?.dataLink:false}); // [{x:0, y:0}, {x:10, y:10},...]
+
+        console.log({
+            points: absolutePoints,
+            link: object.dataLink || false
+        });
     }
 });
 
@@ -157,28 +180,51 @@ canvas.on('mouse:move', function (options) {
 
 function setStartingPoint(options) {
     var offset = $('#canvas-tools').offset();
+    // Just make sure the image is aligned top left
     x = options.e.pageX - offset.left;
     y = options.e.pageY - offset.top;
+    // x = options.e.pageX;
+    // y = options.e.pageY;
 }
 
-function makeRoof(roofPoints) {
+// function makeRoof(roofPoints) {
+//     var left = findLeftPaddingForRoof(roofPoints);
+//     var top = findTopPaddingForRoof(roofPoints);
+//     roofPoints = roofPoints.map(function(point) {
+//         return new Point(point.x - left, point.y - top);
+//     });
+//     roofPoints.push(new Point(roofPoints[0].x, roofPoints[0].y));
+//     var roof = new fabric.Polyline(roofPoints, {
+//         fill: 'rgba(0,0,0,0)',
+//         stroke: '#58c'
+//     });
+//     roof.set({
+//         left: left,
+//         top: top
+//     });
+//     return roof;
+// }
 
-    var left = findLeftPaddingForRoof(roofPoints);
-    var top = findTopPaddingForRoof(roofPoints);
-    roofPoints.push(new Point(roofPoints[0].x,roofPoints[0].y))
-    var roof = new fabric.Polyline(roofPoints, {
-    fill: 'rgba(0,0,0,0)',
-    // fill: "transparent",
-    stroke:'#58c'
-    });
-    roof.set({
-        left: left,
-        top: top,
-    });
+
+// Most part works:
+// function makeRoof(roofPoints) {
+
+//     var left = findLeftPaddingForRoof(roofPoints);
+//     var top = findTopPaddingForRoof(roofPoints);
+//     roofPoints.push(new Point(roofPoints[0].x,roofPoints[0].y))
+//     var roof = new fabric.Polyline(roofPoints, {
+//     fill: 'rgba(0,0,0,0)',
+//     // fill: "transparent",
+//     stroke:'#58c'
+//     });
+//     roof.set({
+//         left: left,
+//         top: top,
+//     });
 
 
-    return roof;
-} // makeRoof
+//     return roof;
+// } // makeRoof
 
 // function makeRoof(roofPoints) {
 //     roofPoints.push(new Point(roofPoints[0].x, roofPoints[0].y));
@@ -190,6 +236,26 @@ function makeRoof(roofPoints) {
 // }
 
 
+function makeRoof(roofPoints) {
+
+    var left = findLeftPaddingForRoof(roofPoints);
+    var top = findTopPaddingForRoof(roofPoints);
+    roofPoints.push(new Point(roofPoints[0].x,roofPoints[0].y))
+    var roof = new fabric.Polyline(roofPoints, {
+    fill: 'rgba(0,0,0,0)',
+    stroke:'#58c'
+    });
+    roof.set({
+        
+        left: left,
+        top: top,
+       
+    });
+
+
+    return roof;
+}
+
 function findTopPaddingForRoof(roofPoints) {
     var result = 999999;
     for (var f = 0; f < lineCounter; f++) {
@@ -199,6 +265,7 @@ function findTopPaddingForRoof(roofPoints) {
     }
     return Math.abs(result);
 }
+
 
 function findLeftPaddingForRoof(roofPoints) {
     var result = 999999;
