@@ -1,5 +1,7 @@
 var roof = null;
-var roofPoints = [];
+var roofPoints = []; // 0,0 initial is at center of canvas
+var mapPoints = []; // 0,0 initial is at the top left of image (after canvas)
+
 var lines = [];
 var lineCounter = 0;
 var drawingObject = {};
@@ -33,11 +35,14 @@ $("#polygon-icon").click(function () {
 
 
 // canvas Drawing
-
+var width = window.screenWidth<window.innerWidth?window.screenWidth:window.innerWidth;
+var height = window.screenHeight;
+// window.canvas = new fabric.Canvas('canvas-tools');
 window.canvas = new fabric.Canvas('canvas-tools', {
-    width: window.screenWidth<window.innerWidth?window.innerWidth:window.screenWidth,
-    height: window.screenHeight<window.innerHeight?window.innerHeighth:window.screenHeight
+    width,
+    height
 });
+
 /* Fix for FabricJS canvas dimensions bug */
 /* If less than 3 secs, it wont fix it and revert back to the small dimensions */
 /*
@@ -51,25 +56,15 @@ setTimeout(()=>{
     resetDimensions();
 },3000)
 
-// setTimeout(()=>{
-//     document.querySelectorAll(".canvas-container, .canvas-container *").forEach(el=>{
-//         el.style.width = window.screenWidth + "px"
-//         el.style.height = window.screenHeight + "px"
-//     });
-// }, 3000);
 
 function resetDimensions() {
     var width = window.screenWidth<window.innerWidth?window.screenWidth:window.innerWidth;
-    height = window.screenHeight;
+    var height = window.screenHeight;
     canvas.setDimensions({
         width,
         height
     });
 
-    // document.querySelectorAll(".canvas-container, .canvas-container *").forEach(el=>{
-    //     el.style.width = width + "px"
-    //     el.style.height = height + "px"
-    // });
     canvas.setBackgroundImage(window.imgSrc, canvas.renderAll.bind(canvas));
 } // resetDimensions
 
@@ -79,65 +74,50 @@ var x = 0;
 var y = 0;
 
 fabric.util.addListener(window,'dblclick', function(){ 
-        drawingObject.type = "";
-        lines.forEach(function(value, index, ar){
-             canvas.remove(value);
-        });
-        //canvas.remove(lines[lineCounter - 1]);
-        roof = makeRoof(roofPoints);
-        canvas.add(roof);
-        canvas.renderAll();
+    drawingObject.type = "";
+    lines.forEach(function(value, index, ar){
+        canvas.remove(value);
+    });
+    //canvas.remove(lines[lineCounter - 1]);
+    roof = makeRoof(roofPoints);
+    canvas.add(roof);
+    canvas.renderAll();
   
     console.log("Double click - region completed");
     //clear arrays
-     roofPoints = [];
-     lines = [];
-     lineCounter = 0;
-    
-     document.querySelector("#polygon-icon.active")?.classList?.remove("active");
+    roofPoints = [];
+    lines = [];
+    lineCounter = 0;
+
+    // Get the last object added to the canvas. 
+    // debugger;
+    var objects = canvas.getObjects()
+    var lastIndex = objects.length - 1;
+    var object = objects[lastIndex]
+    object.mapPoints = mapPoints;
+    mapPoints = []; // reset the global mapPoints array holder
+
+    document.querySelector("#polygon-icon.active")?.classList?.remove("active");
 });
 
-// canvas.on('object:selected', function(event) {
-//     var selectedObject = event.target;
-//     var object = selectedObject;
-
-//     // Check if the selected object is a Polyline
-//     if (object.type === 'polyline') {
-//         // console.log(object.points);
-//         /**
-//          * [Point, Point,...]
-//          * 
-//          * Point {x:0, y:0}
-//          */
-
-//         debugger;
-//         // Convert to universal format
-//         var points = object.points.map(function(point) {
-//             return [
-//                 // point.x + object.getWidth()/2,
-//                 // point.y + object.getHeight()/2
-//                 point.x + object.get("left"),
-//                 point.y + object.get("top")
-//             ];
-//         });
-//         console.log({points, link:object?.dataLink?object?.dataLink:false}); // [{x:0, y:0}, {x:10, y:10},...]
-//     }
-// });
 
 canvas.on('object:selected', function(event) {
     var object = event.target;
 
     // Check if the selected object is a Polyline
     if (object.type === 'polyline') {
-        var absolutePoints = object.points.map(function(point) {
-            return [
-                point.x + object.left,
-                point.y + object.top
-            ];
-        });
+        // debugger;
+
+        // Pointless to get the points relative to the canvas, because in the end want the image map coordinates
+        // var absolutePoints = object.points.map(function(point) {
+        //     return [
+        //         point.x + object.left,
+        //         point.y + object.top
+        //     ];
+        // });
 
         console.log({
-            points: absolutePoints,
+            points: object.mapPoints,
             link: object.dataLink || false
         });
     }
@@ -149,6 +129,9 @@ canvas.on('mouse:down', function (options) {
         setStartingPoint(options); // set x,y
         // x = options.pointer.x;
         // y = options.pointer.y;
+
+        mapPoints.push([x,y])
+        // console.log("x2: " + x + " y2: " + y)
 
         roofPoints.push(new Point(x, y));
         var points = [x, y, x, y];
@@ -174,6 +157,8 @@ canvas.on('mouse:move', function (options) {
             x2: x,
             y2: y
         });
+        // console.log("x2: " + x + " y2: " + y)
+        // console.log(roofPoints)
         canvas.renderAll();
     }
 });
@@ -183,6 +168,7 @@ function setStartingPoint(options) {
     // Just make sure the image is aligned top left
     x = options.e.pageX - offset.left;
     y = options.e.pageY - offset.top;
+
     // x = options.e.pageX;
     // y = options.e.pageY;
 }
