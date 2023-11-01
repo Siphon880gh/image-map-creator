@@ -334,6 +334,9 @@
                 var link = prompt(`Region selected:\nRegion ${userChoice}\n${regionCoords}\n\nEnter the link to a new screen or website when the walkthrough user clicks this region:`);
                 if(link) {
                     //polyLineObjects[index].dataLink = link; // Fails to work
+                    if(link.startsWith("www")) {
+                        link = "https://" + link;
+                    }
                     var itr = 0;
                     canvas.forEachObject(function(object) {
                         if (itr===index) {
