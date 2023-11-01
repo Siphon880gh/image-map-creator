@@ -59,10 +59,17 @@ setTimeout(()=>{
 // }, 3000);
 
 function resetDimensions() {
+    var width = window.screenWidth<window.innerWidth?window.screenWidth:window.innerWidth;
+    height = window.screenHeight;
     canvas.setDimensions({
-        width: window.screenWidth<window.innerWidth?window.screenWidth:window.innerWidth,
-        height: window.screenHeight<window.innerHeight?window.screenHeight:window.innerHeight
+        width,
+        height
     });
+
+    // document.querySelectorAll(".canvas-container, .canvas-container *").forEach(el=>{
+    //     el.style.width = width + "px"
+    //     el.style.height = height + "px"
+    // });
     canvas.setBackgroundImage(window.imgSrc, canvas.renderAll.bind(canvas));
 } // resetDimensions
 
@@ -81,7 +88,7 @@ fabric.util.addListener(window,'dblclick', function(){
         canvas.add(roof);
         canvas.renderAll();
   
-    console.log("double click");
+    console.log("Double click - region completed");
     //clear arrays
      roofPoints = [];
      lines = [];

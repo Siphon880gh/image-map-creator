@@ -93,7 +93,7 @@
                     top: 5px;
                     right: 5px;
                 }
-                #author-actions >* {
+                #author-actions > .icon {
                     background-color: rgba(255, 255, 255, 0.8);
                     border-radius: 50%;
                     cursor: pointer;
@@ -139,7 +139,7 @@
                     align-items: center;
                 } */
 
-                #output-icon {
+                #output-icon, #link-icon {
                     font-size: 9px !important;
                 }
 
@@ -166,15 +166,17 @@
         <!-- <output id="result"></output> -->
 
         <div id="author-actions">
-            <span id="close-icon" title="Cancel screen button">&times;</span>
-            <span id="caption-icon" title="Add caption button">&copy;</span>
-            <span id="polygon-icon" title="Create region button">&#9632;</span>
+            <span id="close-icon" class="icon" title="Cancel screen button">&times;</span>
+            <span id="caption-icon" class="icon" title="Add caption button">&copy;</span>
+            <span id="polygon-icon" class="icon" title="Create region button">&#9632;</span>
             <!-- 
                 Triangle: ▲ (&#9650; for up-pointing triangle)
                 Square: ■ (&#9632;)
                 Circle: ● (&#9679;)
             -->
-            <span id="output-icon" title="Get output button">&lt;/&gt;</span>
+            <span id="link-icon" class="icon" title="Get output button"><i class="fa fa-link"></i></span>
+            <hr/>
+            <span id="output-icon" class="icon" title="Get output button">&lt;/&gt;</span>
             <!-- <span id="reposition-icon" title="Reposition button">&#x283F;</span> -->
         </div>
         
@@ -300,6 +302,66 @@
         } // setBackgroundImageForCanvas
 
 
+
+        // Add click event for canceling screen
+        document.body.querySelector("#close-icon").addEventListener("click", cancelAuthorScreen);
+
+        // Add click event for caption
+        document.body.querySelector("#caption-icon").addEventListener("click", function() {
+        const caption = prompt("Want to add instructions?");
+        const captionDiv = document.querySelector(".thumbnail-caption");
+        if (caption) {
+            captionDiv.innerText = caption;
+            captionDiv.classList.remove("hidden");
+        } else if (caption === "") {
+            captionDiv.innerText = "";
+            captionDiv.classList.add("hidden");
+        }
+        });
+
+        // Add link to shape
+        document.body.querySelector("#link-icon").addEventListener("click", function() {
+            var polyLineCount = 0;
+            canvas.forEachObject(function(object) {
+                if (object.type === 'polyline') {
+                    polyLineCount++;
+                }
+            });
+            if(polyLineCount === 0) {
+                alert("OPPS... You need regions that the walkthrough user clicks to open a link or a new screen.\n\n1. Add a region first.\n2. Then complete that region with a double-click.");
+                return;
+            }
+            var shapes = [];
+            // -127.5,23.5  122.5,30.5  129.5,-20.5  -113.5,-30.5  -129.5,20.5  -126.5,25.5  -126.5,25.5  -127.5,23.5
+
+            canvas.forEachObject(function(object) {
+                if (object.type === 'polyline') {
+                    var points = object.points.map(function(point) {
+                    return [
+                        point.x,
+                        point.y
+                    ];
+                });
+                shapes.push(points.join("  "));
+                }
+            }); // forEachObject
+
+            var choices = (()=>{
+                var concat = "";
+                for(var i=0; i<shapes.length; i++) {
+                    concat += `${i+1}. ${shapes[i]}\n`;
+                }
+                return concat;
+            })()
+            var userChoice = prompt(`Choose the shape you are adding a link to in your walkthrough. For example:\n1,2,3,4...:\n\nChoices:\n${choices}`);
+            userChoice = parseInt(userChoice);
+            if(userChoice !== null && !isNaN(userChoice)) {
+                var index = userChoice - 1;
+                var shape = shapes[index];
+                var link = prompt(`Shape selected: Shape ${shape}. When the walkthrough user clicks this region, it will open what link/url:\n\n${shape}`);
+            }
+        })
+
         document.querySelector("#files").addEventListener("change", (e) => {
         if(document.querySelector("#files").value === "") return;
         if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -339,21 +401,7 @@
             img.src = event.target.result;
             window.imgSrc = img.src;
 
-              // Add click event for canceling screen
-              document.body.querySelector("#close-icon").addEventListener("click", cancelAuthorScreen);
 
-              // Add click event for caption
-              document.body.querySelector("#caption-icon").addEventListener("click", function() {
-                const caption = prompt("Want to add instructions?");
-                const captionDiv = document.querySelector(".thumbnail-caption");
-                if (caption) {
-                    captionDiv.innerText = caption;
-                    captionDiv.classList.remove("hidden");
-                } else if (caption === "") {
-                    captionDiv.innerText = "";
-                    captionDiv.classList.add("hidden");
-                }
-              });
               setBackgroundImageForCanvas("canvas-tools", picFile.result)
 
             }); // Pic upload loads
