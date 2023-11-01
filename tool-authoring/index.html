@@ -305,14 +305,6 @@
 
             canvas.forEachObject(function(object) {
                 if (object.type === 'polyline') {
-                //     var points = object.points.map(function(point) {
-                //     return [
-                //         object.mapPoints[0],
-                //         object.mapPoints[1]
-                //         // point.x + object.get("left"),
-                //         // point.y + object.get("top")
-                //     ];
-                // });
                     var points = object.mapPoints;
                     regionsCoords.push(points.join("  "));
                 }
@@ -326,7 +318,7 @@
                 }
                 return concat;
             })()
-            var rawUserChoice = prompt(`Choose the region you are adding a link to in your walkthrough. For example, you enter '1' to select the first region:\n\nRegion choices:\n${choices}`);
+            var rawUserChoice = prompt(`Choose the region you are adding a link to in your walkthrough. For example, you enter '1' to select the first region:\n\nRegion choices (xy coordinates 0,0 from top left):\n${choices}`);
             userChoice = parseInt(rawUserChoice);
             if(rawUserChoice !== null && !isNaN(userChoice)) {
                 var index = userChoice - 1;
@@ -370,15 +362,6 @@
             // Triggers when file is loaded
             picReader.addEventListener("load", function (event) {
               const picFile = event.target;
-            //   window.div = document.createElement("div");
-            //   div.className = "thumbnail-container";
-            //   div.innerHTML = `
-            //     <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
-            //     <img class="thumbnail" src="${picFile.result}" title="${picFile?.name?picFile.name:'Screen'}"/>
-            //     <span class="close-icon" title="Remove">&times;</span>
-            //     <span class="caption-icon" title="Caption">&copy;</span>
-            //   `;
-            //   output.appendChild(div);
       
             // Get size
             const img = new Image();
@@ -448,15 +431,6 @@
             ((m)=>{
                 canvas.forEachObject(function(object) {
                     if (object.type === 'polyline') {
-                        // [[0,0],[0,100],[100,100],[100,0],[0,0]]
-                        // var points = object.points.map(function(point) {
-                        //     return [
-                        //         object.mapPoints[0],
-                        //         object.mapPoints[1],
-                        //         // point.x + object.get("left"),
-                        //         // point.y + object.get("top")
-                        //     ];
-                        // });
                         var points = object.mapPoints;
 
                         // 0,0,0,100,100,100,100,0,0,0
@@ -485,9 +459,15 @@
             captionedImg.style.width = window.screenWidth + "px";
             captionedImg.style.position = "relative";
             captionedImg.append(caption, img, map);
+            
+            var authorInstructions = document.createElement("div");
+            authorInstructions.innerHTML = `<div id="ui-walkthrough-instructions" style="padding:10px; text-align:center; font-family: sans-serif;"><div style="margin:10px auto; font-size:120%;">Need an <u>image with clickable regions</u> that navigate to different webpages?<br/>Or need <u>interactive screens to onboard new users</u> to your website in a <u>walkthrough tour</u>?</div><div style="font-size:133%; letter-spacing:1px; margin:10px auto; ">- Get the code -</div><div style="font-family: serif;"><b>1.</b> Right-Click → Inspect. &#9;<br/><b>2.</b> Right-Click &lt;main&gt; → Edit as HTML. &#9;<br/><b>3.</b> Copy the code to a new HTML file and remove this block of instructions.</div></div>`
+
+            var main = document.createElement("main")
+            main.append(style, captionedImg);
 
             var newWindow = window.open("about:blank");
-            newWindow.document.body.append(style, captionedImg);
+            newWindow.document.body.append(main, authorInstructions);
 
         } // outputHTML
 
