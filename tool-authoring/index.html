@@ -327,16 +327,18 @@
         // Add link to shape
         document.body.querySelector("#link-icon").addEventListener("click", function() {
             var polyLineCount = 0;
+            var polyLineObjects = [];
             canvas.forEachObject(function(object) {
                 if (object.type === 'polyline') {
                     polyLineCount++;
+                    polyLineObjects.push(object);
                 }
             });
             if(polyLineCount === 0) {
                 alert("OPPS... You need regions that the walkthrough user clicks to open a new screen or link.\n\n1. Add a region first.\n2. Then complete that region with a double-click.");
                 return;
             }
-            var shapes = [];
+            var regionsCoords = [];
             // -127.5,23.5  122.5,30.5  129.5,-20.5  -113.5,-30.5  -129.5,20.5  -126.5,25.5  -126.5,25.5  -127.5,23.5
 
             canvas.forEachObject(function(object) {
@@ -347,23 +349,36 @@
                         point.y
                     ];
                 });
-                shapes.push(points.join("  "));
+                regionsCoords.push(points.join("  "));
                 }
             }); // forEachObject
 
+            /* Prepare choices of regions in prompt */
             var choices = (()=>{
                 var concat = "";
-                for(var i=0; i<shapes.length; i++) {
-                    concat += `${i+1}. ${shapes[i]}\n`;
+                for(var i=0; i<regionsCoords.length; i++) {
+                    concat += `${i+1}. ${regionsCoords[i]}\n`;
                 }
                 return concat;
             })()
-            var userChoice = prompt(`Choose the region you are adding a link to in your walkthrough. For example, you enter '1' to select the first region:\n\nRegion choices:\n${choices}`);
-            userChoice = parseInt(userChoice);
-            if(userChoice !== null && !isNaN(userChoice)) {
+            var rawUserChoice = prompt(`Choose the region you are adding a link to in your walkthrough. For example, you enter '1' to select the first region:\n\nRegion choices:\n${choices}`);
+            userChoice = parseInt(rawUserChoice);
+            if(rawUserChoice !== null && !isNaN(userChoice)) {
                 var index = userChoice - 1;
-                var shape = shapes[index];
-                var link = prompt(`Region selected:\nRegion ${userChoice}\n${shape}\n\nEnter the link to a new screen or website when the walkthrough user clicks this region:`);
+                var regionCoords = regionsCoords[index];
+                var link = prompt(`Region selected:\nRegion ${userChoice}\n${regionCoords}\n\nEnter the link to a new screen or website when the walkthrough user clicks this region:`);
+                if(link) {
+                    //polyLineObjects[index].dataLink = link; // Fails to work
+                    var itr = 0;
+                    canvas.forEachObject(function(object) {
+                        if (itr===index) {
+                            object.dataLink = link;
+                        }
+                        itr++;
+                    });
+                }
+            } else if(rawUserChoice) {
+                alert("Invalid choice. Please try again. Remember you enter a number. For example, 1, for the first choice.");
             }
         })
 

@@ -116,7 +116,7 @@ canvas.on('object:selected', function(event) {
                 point.y
             ];
         });
-        console.log(points); // [{x:0, y:0}, {x:10, y:10},...]
+        console.log({points, link:selectedObject?.dataLink?selectedObject?.dataLink:false}); // [{x:0, y:0}, {x:10, y:10},...]
     }
 });
 
