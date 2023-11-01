@@ -9,6 +9,7 @@
 
     <!-- Include the Tailwind CSS CDN link -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
 
     <!-- Assets -->
     <link rel="stylesheet" href="assets/css/upload.css">
@@ -25,7 +26,7 @@
         // Configurer: Configure here
         var startingMode = STARTING.NO_SPLASH_SCREEN;
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.4.0/fabric.min.js"></script>
 </head>
 
 <body>
@@ -51,10 +52,15 @@
     <div id="upload-screen" class="bg-gray-100 h-screen flex justify-center relative hidden">
         <!-- Positioned at 33% from the top -->
         <div class="text-center absolute top-1/3 transform -translate-y-1/3">
-            <div>
+            <div id="upload-1" class="hidden">
                 <label class="text-4xl" for="files">Upload images from your device:</label>
                 <br/><br/>
                 <input id="files" type="file" multiple="multiple" accept="image/jpeg, image/png, image/jpg">
+            </div>
+            <div id="upload-2" class="hidden">
+                <label class="text-4xl text-light"><i>Loading...</i></label>
+                <div style="height:20px;"></div>
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
             </div>
         </div>
     </div>
@@ -101,7 +107,7 @@
                     font-size: 12px;
                 }
 
-                /* .close-icon {
+                /* #close-icon {
                     position: absolute;
                     top: 5px;
                     right: 5px;
@@ -116,7 +122,7 @@
                     justify-content: center;
                     align-items: center;
                 } */
-                /* .caption-icon {
+                /* #caption-icon {
                     position: absolute;
                     top: 38px;
                     right: 5px;
@@ -133,7 +139,7 @@
                     align-items: center;
                 } */
 
-                .output-icon {
+                #output-icon {
                     font-size: 9px !important;
                 }
 
@@ -160,20 +166,20 @@
         <!-- <output id="result"></output> -->
 
         <div id="author-actions">
-            <span class="close-icon" title="Cancel screen button">&times;</span>
-            <span class="caption-icon" title="Add caption button">&copy;</span>
-            <span class="polygon-icon" title="Create region button">&#9632;</span>
+            <span id="close-icon" title="Cancel screen button">&times;</span>
+            <span id="caption-icon" title="Add caption button">&copy;</span>
+            <span id="polygon-icon" title="Create region button">&#9632;</span>
             <!-- 
                 Triangle: ▲ (&#9650; for up-pointing triangle)
                 Square: ■ (&#9632;)
                 Circle: ● (&#9679;)
             -->
-            <span class="output-icon" title="Get output button">&lt;/&gt;</span>
-            <!-- <span class="reposition-icon" title="Reposition button">&#x283F;</span> -->
+            <span id="output-icon" title="Get output button">&lt;/&gt;</span>
+            <!-- <span id="reposition-icon" title="Reposition button">&#x283F;</span> -->
         </div>
         
         <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
-        <canvas id="canvas-tools" class="canvas" width="500" height="500"></canvas>
+        <canvas id="canvas-tools" class="canvas"></canvas>
 
         <!-- <button id="finishPolygon">Finish Polygon</button>
         <button id="getOutput">Get Output</button> -->
@@ -196,9 +202,27 @@
         } // loadSplashScreen
         
         function loadUploadScreen() {
+            document.getElementById("upload-1").classList.remove("hidden");
+            document.getElementById("upload-2").classList.add("hidden");
+
             document.getElementById("splash-screen").classList.add("hidden");
             document.getElementById("author-screen").classList.add("hidden");
+            
             document.getElementById("upload-screen").classList.remove("hidden");
+        }
+
+
+        function waitAuthorScreen() {
+            document.getElementById("upload-1").classList.add("hidden");
+            document.getElementById("upload-2").classList.remove("hidden");
+        }
+
+        function loadAuthorScreen() {
+            document.getElementById("upload-1").classList.remove("hidden");
+            document.getElementById("upload-2").classList.add("hidden");
+
+            document.getElementById("upload-screen").classList.add("hidden");
+            document.getElementById("author-screen").classList.remove("hidden");
         }
 
         function cancelAuthorScreen() {
@@ -206,6 +230,12 @@
             const output = document.querySelector("#result");
             if (confirm("Cancel screen?")) {
                 // output.removeChild(div);
+                canvas.forEachObject(function(object) {
+                    if (object.type === 'polyline') {
+                        canvas.remove(object);
+                    }
+                });
+                canvas.renderAll();
                 resetCanvas("canvas-tools");
                 loadUploadScreen();
             }
@@ -213,10 +243,6 @@
             captionDiv.classList.remove("hidden");
         }
 
-        function loadAuthorScreen() {
-            document.getElementById("upload-screen").classList.add("hidden");
-            document.getElementById("author-screen").classList.remove("hidden");
-        }
         
         if(startingMode === STARTING.SPLASH_SCREEN)
             loadSplashScreen(loadUploadScreen);
@@ -274,11 +300,15 @@
         } // setBackgroundImageForCanvas
 
 
-
         document.querySelector("#files").addEventListener("change", (e) => {
         if(document.querySelector("#files").value === "") return;
         if (window.File && window.FileReader && window.FileList && window.Blob) {
-            loadAuthorScreen();
+            waitAuthorScreen();
+            setTimeout(()=>{
+                resetDimensions();
+                loadAuthorScreen();
+            }, 3000)
+
           const files = e.target.files;
           const output = document.querySelector("#result");
           for (let i = 0; i < files.length; i++) {
@@ -300,11 +330,20 @@
             //   `;
             //   output.appendChild(div);
       
+            // Get size
+            const img = new Image();
+            img.onload = function() {
+                window.screenWidth = this.width;
+                window.screenHeight = this.height;
+            };
+            img.src = event.target.result;
+            window.imgSrc = img.src;
+
               // Add click event for canceling screen
-              document.body.querySelector(".close-icon").addEventListener("click", cancelAuthorScreen);
+              document.body.querySelector("#close-icon").addEventListener("click", cancelAuthorScreen);
 
               // Add click event for caption
-              document.body.querySelector(".caption-icon").addEventListener("click", function() {
+              document.body.querySelector("#caption-icon").addEventListener("click", function() {
                 const caption = prompt("Want to add instructions?");
                 const captionDiv = document.querySelector(".thumbnail-caption");
                 if (caption) {
@@ -356,6 +395,7 @@
 
 
         function outputHTML() {
+            alert("To be completed... See console.")
             //TODO: Erase `<span class="close-icon" title="Remove">×</span>`
             var style = document.createElement("style");
             style.innerHTML = document.getElementById("output-2").innerHTML;
@@ -380,12 +420,12 @@
             // console.log({style:style.innerHTML, result:result.innerHTML});
         } // outputHTML
 
-        document.getElementById("getOutput").addEventListener("click", outputHTML);
+        document.getElementById("output-icon").addEventListener("click", outputHTML);
 
     </script>
 
 
-
+<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
 <script src="assets/js/fabric-plug.js"></script>
 
 </body>
