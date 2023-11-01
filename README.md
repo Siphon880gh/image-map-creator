@@ -19,6 +19,7 @@ Create image with clickable regions that you can add to your website.
 - Set if a region only opens link when you right-click or left-click. 
 This allows you to onboard users when there's a right-click context menu involved. Screenshot 1 would have the app or website. User right clicks a specific area as instructed, then Screenshot 2 will be a screenshot of the app or website but with the context menu. Screenshot 2's context menu will have a clickable region.
 - Userflow Walkthrough presentations have logic that renders md files of links quickly so you can have a nice table of contents or reference page to the walkthroughs. Supports nested md lists and renders them as collapsible/toggleables.
+- You can cancel out of the current image by pressing Escape.
 
 ## Future Version
 
