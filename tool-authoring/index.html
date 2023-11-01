@@ -358,12 +358,12 @@
                 }
                 return concat;
             })()
-            var userChoice = prompt(`Choose the region you are adding a link to in your walkthrough. For example, you enter '1' to select the first region.:\n\nChoices:\n${choices}`);
+            var userChoice = prompt(`Choose the region you are adding a link to in your walkthrough. For example, you enter '1' to select the first region:\n\nRegion choices:\n${choices}`);
             userChoice = parseInt(userChoice);
             if(userChoice !== null && !isNaN(userChoice)) {
                 var index = userChoice - 1;
                 var shape = shapes[index];
-                var link = prompt(`Region selected: Region ${shape}. Enter the link to a new screen or website when the walkthrough user clicks this region:\n\n${shape}`);
+                var link = prompt(`Region selected:\nRegion ${userChoice}\n${shape}\n\nEnter the link to a new screen or website when the walkthrough user clicks this region:`);
             }
         })
 
