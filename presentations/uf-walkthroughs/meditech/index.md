@@ -16,12 +16,14 @@
         - [Medication administration - Pain Admin](screens/acuity/1.html)
         - [Medication administration - Pain Reassess](screens/acuity/1.html)
 
-# Test
+# About
 
-Lorem
+This is not a fully freshed out user flow (uf) walkthrough yet but will be!
 
-## Test AA
+# Test Table of Contents
 
-Lorem
+This is to test table of contents creation at the top right table of contents nav link
 
-# Test B
+## Subheading
+
+Notice that the actual contents of this page are in a .md file titled index.md, making it for easy authoring. The subfolders are all up to the discretion of the author that linked together the image maps. Change the tab/bookmark title at index.html's `<title>Title</title>` element.

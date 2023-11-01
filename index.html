@@ -5,216 +5,505 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notes</title>
+    <title>Image Map Creator</title>
+
+    <!-- Include the Tailwind CSS CDN link -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css">
+
+    <!-- Assets -->
+    <link rel="stylesheet" href="assets/css/upload.css">
+    <link rel="stylesheet" href="assets/css/fabric-plug.css">
+
+    <!-- Configuration -->
+    <script>
+        // Configurer: Ignore this block
+        var STARTING = {
+            SPLASH_SCREEN: 0,
+            NO_SPLASH_SCREEN: 1
+        }
+
+        // Configurer: Configure here
+        var startingMode = STARTING.SPLASH_SCREEN;
+    </script>
     <style>
-        img {
-            display: block;
-            width: 100%;
-            margin: 10px;
-        }
+                #canvas-tools {
+                    display: block;
+                    width: 100%;
+                    height: auto;
+                }
 
-        .container {
-            font-size: 100%;
-        }
+                #author-actions {
+                    display:flex;
+                    flex-flow: column nowrap;
+                    justify-content: flex-start;
+                    row-gap: 10px;
+                    position: fixed;
+                    top: 5px;
+                    right: 5px;
+                    z-index: 9;
+                }
+                #author-actions > .icon {
+                    background-color: rgba(255, 255, 255, 0.8);
+                    border-radius: 50%;
+                    cursor: pointer;
+                    font-weight: bold;
+                    z-index: 10;
+                    width: 25px;
+                    height: 25px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 12px;
+                }
+                #polygon-icon {
+                    transition: color 200ms ease-in;
+                }
+                #polygon-icon.active {
+                    color: red;
+                }
+                #output-icon, #link-icon {
+                    font-size: 9px !important;
+                }
 
-        @media (min-width: 768px) {
-            img {
-                width: 50%;
-                margin: 10px auto;
-            }
-
-            .container {
-                font-size: 150%;
-            }
-        }
-
-        #toc-toggler {
-            cursor: pointer;
-            position: fixed;
-            top: 0;
-            right: 20px;
-        }
-
-        #toc {
-            display: none;
-            position: fixed;
-            top: 20px;
-            right: 0;
-            padding: 5px;
-            background-color: white;
-            line-height: 1.5rem;
-            /* If long TOC clipped off on mobile */
-            max-height: 100vh;
-            overflow-y: scroll;
-        }
-
-        #toc-toggler:hover #toc {
-            display: block;
-        }
-
-        #mobile-tap.active+#toc {
-            display: block;
-        }
-
-        .h2 {
-            margin-left: 2ch;
-        }
-
-        .h2::before {
-            content: "•\00a0";
-        }
-
-        .h3 {
-            margin-left: 4ch;
-        }
-
-        .h3::before {
-            content: "—";
-        }
-
-        .h4 {
-            margin-left: 6ch;
-        }
-
-        .h4::before {
-            content: "➣";
-        }
-
-        .h5 {
-            margin-left: 8ch;
-        }
-
-        .h5::before {
-            content: "➨";
-        }
-
-        .h6 {
-            margin-left: 10ch;
-        }
-
-        .h6::before {
-            content: "◦\00a0";
-        }
     </style>
-    <style>
-        li {
-            margin-top: 10px;
-        }
-        li:has(>details) {
-            list-style: none;
-        }
-    </style>
-    <link rel="stylesheet" href="assets/vendors/no-normalizer.tailwind.min.css" />
 </head>
 
-<body
-    onclick="if(!event.target.matches('#mobile-tap')) { document.querySelector('#mobile-tap').classList.remove('active'); }">
-    <div id="toc-toggler">
-        <div id="mobile-tap" onclick="event.target.classList.toggle('active')">📖</div>
-        <div id="toc"></div>
+<body>
+    <div id="splash-screen" class="bg-gray-100 h-screen flex justify-center relative hidden">
+        <!-- Positioned at 33% from the top -->
+        <div class="text-center absolute top-1/3 transform -translate-y-1/3">
+            <!-- First liner -->
+            <div class="text-9xl" id="first-text">
+                Image Map Creator
+            </div>
+
+            <!-- Second liner -->
+            <div class="text-6xl mt-4" id="second-text">
+                Design Tool
+            </div>
+            <div class="mt-8" id="second-text" style="cursor:help" onclick="alert('What is this?\n\n'+event.target.textContent.trim())">
+                Create image with clickable regions that you can add to your website. <br/><u>Or</u> create a series of screenshots to onboard new users to your website in a walkthrough tour.
+            </div>
+        </div>
+
+        <div class="w-full bg-gray-200 mx-auto rounded-lg overflow-hidden border border-gray-300 absolute bottom-0 left-0">
+            <div id="progress-bar-splash" class="progress-bar bg-green-500 text-xs leading-none py-1" data-loading-ai style="width:0;"></div>
+        </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+    <div id="upload-screen" class="bg-gray-100 h-screen flex justify-center relative hidden">
+        <!-- Positioned at 33% from the top -->
+        <div class="text-center absolute top-1/3 transform -translate-y-1/3">
+            <div id="upload-1" class="hidden">
+                <label class="text-4xl" for="files">Upload images from your device:</label>
+                <br/><br/>
+                <input id="files" type="file" multiple="multiple" accept="image/jpeg, image/png, image/jpg">
+            </div>
+            <div id="upload-2" class="hidden">
+                <label class="text-4xl text-light"><i>Loading...</i></label>
+                <div style="height:20px;"></div>
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+            </div>
+        </div>
+    </div>
+
+    <div id="author-screen" class="bg-gray-100 h-screen flex flex-col flex-start relative hidden">
+        <style id="output-2">
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            .thumbnail-caption.overlay {
+                position: absolute;
+                background-color: rgba(0, 0, 0, 0.8); /* semi-transparent black */
+            }
+            .thumbnail-caption {
+                top: 0;
+                width: 100%;
+                background-color: rgba(0, 0, 0, 1); /* opaque black */
+                color: white;
+                padding: 5px;
+                text-align: center;
+                overflow: visible;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                z-index: 5;
+                padding: 22px 0;
+            }
+            .thumbnail-caption:empty {
+                display: none;
+            }
+        </style>
+
+        <div id="author-actions">
+            <span id="close-icon" class="icon" title="Cancel screen button">&times;</span>
+            <span id="caption-icon" class="icon" title="Add caption button">&copy;</span>
+            <span id="polygon-icon" class="icon" title="Create region button" onclick="event.target.classList.toggle('active')">&#9632;</span>
+            <!-- 
+                Triangle: ▲ (&#9650; for up-pointing triangle)
+                Square: ■ (&#9632;)
+                Circle: ● (&#9679;)
+            -->
+            <span id="link-icon" class="icon" title="Get output button"><i class="fa fa-link"></i></span>
+            <hr style="visibility:hidden"/>
+            <span id="output-icon" class="icon" title="Get output button">&lt;/&gt;</span>
+            <!-- <span id="reposition-icon" title="Reposition button">&#x283F;</span> -->
+        </div>
+        
+        <main id="captioned-img" style="position:relative;">
+            <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
+            <canvas id="canvas-tools" class="canvas"></canvas>
+        </main>
+
+        <!-- <button id="finishPolygon">Finish Polygon</button>
+        <button id="getOutput">Get Output</button> -->
+    </div> <!-- author-screen -->
+
     <script>
-
-        function htmlTableOfContents(elNode) {
-            var toc = document.getElementById("toc");
-            var headings = [].slice.call(elNode.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-
-            headings.forEach(function (heading, i) {
-                var ref = "toc" + i;
-                if (heading.hasAttribute("id"))
-                    ref = heading.getAttribute("id");
-                else
-                    heading.setAttribute("id", ref);
-
-                var link = document.createElement("a");
-                link.setAttribute("href", "#" + ref);
-                link.textContent = heading.textContent;
-
-                var div = document.createElement("div");
-                div.classList.add(heading.tagName.toLowerCase());
-                link.addEventListener("click", (event) => {
-                    document.querySelector('#mobile-tap').classList.remove('active')
-                })
-                div.appendChild(link);
-                toc.appendChild(div);
-            });
-        } // htmlTableOfContents
-
-        function convertParagraphsToSpans(element) {
-            const ps = Array.from(element.querySelectorAll('p'));
-            ps.forEach(p => {
-                const span = document.createElement('span');
-                while (p.firstChild) {
-                    span.appendChild(p.firstChild);
+        function loadSplashScreen(cb) {
+            document.getElementById("splash-screen").classList.remove("hidden");
+            
+            var countProgressSplash = 0;
+            var intervProgressSplash = setInterval(()=>{
+                if(countProgressSplash===3) {
+                    clearInterval(intervProgressSplash)
+                    document.getElementById("splash-screen").classList.add("hidden");
+                    if(cb) cb();
                 }
-                p.parentNode.replaceChild(span, p);
-            });
-        } // convertParagraphsToSpans
+                document.getElementById("progress-bar-splash").style.width = (parseInt(document.getElementById("progress-bar-splash").style.width) + 46) + "%";
+                countProgressSplash++
+            }, 1000)
+        } // loadSplashScreen
+        
+        function loadUploadScreen() {
+            document.getElementById("upload-1").classList.remove("hidden");
+            document.getElementById("upload-2").classList.add("hidden");
 
-        function transformListsToDetails(element) {
-            const uls = Array.from(element.querySelectorAll('ul'));
+            document.getElementById("splash-screen").classList.add("hidden");
+            document.getElementById("author-screen").classList.add("hidden");
+            
+            document.getElementById("upload-screen").classList.remove("hidden");
+        }
 
-            uls.forEach(ul => {
-                const parentLi = ul.closest('li');
-                if (!parentLi) return;
 
-                const details = document.createElement('details');
-                const summary = document.createElement('summary');
+        function waitAuthorScreen() {
+            document.getElementById("upload-1").classList.add("hidden");
+            document.getElementById("upload-2").classList.remove("hidden");
+        }
 
-                while (parentLi.firstChild !== ul) {
-                    summary.appendChild(parentLi.firstChild);
-                }
+        function loadAuthorScreen() {
+            document.getElementById("upload-1").classList.remove("hidden");
+            document.getElementById("upload-2").classList.add("hidden");
 
-                parentLi.insertBefore(details, ul);
-                details.appendChild(summary);
-                details.appendChild(ul); // Move ul inside details
-            });
-        } // transformListsToDetails
+            document.getElementById("upload-screen").classList.add("hidden");
+            document.getElementById("author-screen").classList.remove("hidden");
+        }
 
-        fetch("index.md", {
-            cache: "no-cache"
-        }).then(response => response.text())
-            .then(source => {
-                var md = window.markdownit();
+        function cancelAuthorScreen() {
+            document.querySelector("#files").value = ""
+            const output = document.querySelector("#result");
+            if (confirm("Cancel screen?")) {
+                // output.removeChild(div);
+                canvas.forEachObject(function(object) {
+                    if (object.type === 'polyline') {
+                        canvas.remove(object);
+                    }
+                });
+                canvas.renderAll();
+                resetCanvas("canvas-tools");
+                loadUploadScreen();
+            }
+            const captionDiv = document.querySelector(".thumbnail-caption");
+            captionDiv.classList.remove("hidden");
+        }
 
-                const defaultRender = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
-                    return self.renderToken(tokens, idx, options);
-                };
+        
+        if(startingMode === STARTING.SPLASH_SCREEN)
+            loadSplashScreen(loadUploadScreen);
+        else
+            loadUploadScreen();
 
-                md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-                    // Add a "target" attribute
-
-                    tokens[idx].attrPush(['target', '_blank']);
-
-                    // Add a "rel" attribute to prevent potential security issues with `target="_blank"`
-
-                    tokens[idx].attrPush(['rel', 'noopener noreferrer']);
-
-                    // pass token to default renderer.
-
-                    return defaultRender(tokens, idx, options, env, self);
-                };
-
-                // Lazy editing. Single lines will count as separate lines rather than ignored in markdown
-                const doubleNewLine = (source) => {
-                    return source.replace(/([^\n])\n([^\n])/g, '$1\n\n$2');
-                };
-                source = doubleNewLine(source);
-
-                var result = md.render(source);
-                document.body.append((()=>{
-                    const div = document.createElement("div")
-                    div.innerHTML = result;
-                    return div;
-                })());
-
-                transformListsToDetails(document.body);
-                convertParagraphsToSpans(document.body);
-                htmlTableOfContents(document.body);
-            });
+        // TODO:
+        function getUserID() {
+            return "TestUser1";
+        } // getUserID
     </script>
+
+    <script>
+        function resetCanvas(canvasId) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error('Canvas with ID', canvasId, 'not found.');
+                return;
+            }
+
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }  // resetCanvas
+        function setBackgroundImageForCanvas(canvasId, imagePath) {
+            // Select the canvas and its context
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error('Canvas with ID', canvasId, 'not found.');
+                return;
+            }
+
+            var ctx = canvas.getContext('2d');
+
+            // Create a new image object
+            var img = new Image();
+
+            // When the image has loaded, draw it to the canvas
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+
+                // When the image has loaded, adjust canvas size and draw it to the canvas
+            img.onload = function() {
+                // Adjust canvas dimensions to match image resolution
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+
+            // Set the source of the image
+            img.src = imagePath;
+
+
+        } // setBackgroundImageForCanvas
+
+        // Add click event for canceling screen
+        document.body.querySelector("#close-icon").addEventListener("click", cancelAuthorScreen);
+
+        // Add click event for caption
+        document.body.querySelector("#caption-icon").addEventListener("click", function() {
+        const caption = prompt("Want to add instructions?");
+        const captionDiv = document.querySelector(".thumbnail-caption");
+        if (caption) {
+            captionDiv.innerHTML = caption;
+            captionDiv.classList.remove("hidden");
+        } else if (caption === "") {
+            captionDiv.innerText = "";
+            captionDiv.classList.add("hidden");
+        }
+        });
+
+        // Add link to shape
+        document.body.querySelector("#link-icon").addEventListener("click", function() {
+            var polyLineCount = 0;
+            var polyLineObjects = [];
+            canvas.forEachObject(function(object) {
+                if (object.type === 'polyline') {
+                    polyLineCount++;
+                    polyLineObjects.push(object);
+                }
+            });
+            if(polyLineCount === 0) {
+                alert("OPPS... You need regions that the walkthrough user clicks to open a new screen or link.\n\n1. Add a region first.\n2. Then complete that region with a double-click.");
+                return;
+            }
+            var regionsCoords = [];
+            // -127.5,23.5  122.5,30.5  129.5,-20.5  -113.5,-30.5  -129.5,20.5  -126.5,25.5  -126.5,25.5  -127.5,23.5
+
+            canvas.forEachObject(function(object) {
+                if (object.type === 'polyline') {
+                    var points = object.mapPoints;
+                    regionsCoords.push(points.join("  "));
+                }
+            }); // forEachObject
+
+            /* Prepare choices of regions in prompt */
+            var choices = (()=>{
+                var concat = "";
+                for(var i=0; i<regionsCoords.length; i++) {
+                    concat += `${i+1}. ${regionsCoords[i]}\n`;
+                }
+                return concat;
+            })()
+            var rawUserChoice = prompt(`CHOOSE REGION:\nTo select the first region, for example, you enter: '1'.\n\nRIGHT-CLICK?\nIf you want right-click to open the link instead: '1 r'\n\nRegion choices (xy coordinates start top left from 0,0):\n${choices}`);
+            var wantRightClickTrigger = rawUserChoice.toLowerCase().replaceAll(/(\s){2,}/g, " ").split(" ")?.[1] === "r"; // eg. 1 r // eg 1 R
+            var userChoice = parseInt(rawUserChoice);
+            if(rawUserChoice !== null && !isNaN(userChoice)) {
+                var index = userChoice - 1;
+                var regionCoords = regionsCoords[index];
+                var link = prompt(`Region selected:\nRegion ${userChoice}\n${regionCoords}\n\nENTER LINK\nEnter link to a new screen or website when the walkthrough user interacts with this region:`);
+                if(link) {
+                    //polyLineObjects[index].dataLink = link; // Fails to work
+                    if(link.startsWith("www")) {
+                        link = "https://" + link;
+                    }
+                    var itr = 0;
+                    canvas.forEachObject(function(object) {
+                        if (itr===index) {
+                            object.dataLink = link;
+                            object.wantRightClickTrigger = wantRightClickTrigger;
+                        }
+                        itr++;
+                    });
+                }
+            } else if(rawUserChoice) {
+                alert("Invalid choice. Please try again. Remember you enter a number. For example, 1, for the first choice.");
+            }
+        })
+
+        document.querySelector("#files").addEventListener("change", (e) => {
+        if(document.querySelector("#files").value === "") return;
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+            waitAuthorScreen();
+            setTimeout(()=>{
+                resetDimensions();
+                loadAuthorScreen();
+            }, 3000)
+
+          const files = e.target.files;
+          for (let i = 0; i < files.length; i++) {
+            if(i>0) break; // Only support one screen per edit
+
+            if (!files[i].type.match("image")) continue;
+            const picReader = new FileReader();
+
+            // Triggers when file is loaded
+            picReader.addEventListener("load", function (event) {
+              const picFile = event.target;
+      
+            // Get size
+            const img = new Image();
+            img.onload = function() {
+                window.screenWidth = this.width;
+                window.screenHeight = this.height;
+                document.getElementById("captioned-img").style.width = window.screenWidth + "px";
+            };
+            img.src = event.target.result;
+            window.imgSrc = img.src;
+
+
+              setBackgroundImageForCanvas("canvas-tools", picFile.result)
+
+            }); // Pic upload loads
+
+            // Triggers load event
+            picReader.readAsDataURL(files[i]);
+          }
+        } else {
+          alert("Your browser does not support File API");
+        }
+      });
+    </script>
+
+    <script>
+        const haveShapes = false;
+        document.addEventListener('keydown', function(event) {
+            // Using the `key` property (preferred way)
+            if (event?.key === 'Escape' || event?.key === 'Esc' || event?.keyCode === 27) {
+                if(!haveShapes)
+                    cancelAuthorScreen();
+            } else if (event?.key === 'Enter' || event?.keyCode === 13) {
+                outputHTML();
+            }
+        });
+
+        // Example usage:
+        // var base64URL = getCanvasAsBase64URL('canvas-tools');
+        // console.log(base64URL);
+        function getCanvasAsBase64URL(canvasId, format = 'image/png', quality = 1.0) {
+            var canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.error('Canvas with ID', canvasId, 'not found.');
+                return null;
+            }
+
+            return canvas.toDataURL(format, quality);
+        }
+
+        function outputHTML() {
+            var caption = document.createElement("div");
+            var isOverlay = document.querySelector(".thumbnail-caption").className.includes("overlay");
+            caption.className=`thumbnail-caption ${isOverlay?"overlay":""}`
+            caption.innerHTML=document.querySelector(".thumbnail-caption").innerHTML;
+            // <div class="thumbnail-caption overlay"></div>
+
+            var img = document.createElement("img");
+            img.src = window.imgSrc;
+            img.style.width = document.getElementById("canvas-tools").width + "px";
+            img.style.height = document.getElementById("canvas-tools").height + "px";
+            img.setAttribute("usemap", "#regions");
+            img.setAttribute("alt", "Screen");
+
+
+            var map = document.createElement("map");
+            map.setAttribute("name", "regions");
+            // map>(area*N)
+            ((m)=>{
+                canvas.forEachObject(function(object) {
+                    if (object.type === 'polyline') {
+                        var points = object.mapPoints;
+
+                        // 0,0,0,100,100,100,100,0,0,0
+                        var strCoords = points.toString();
+                        var link = object.dataLink?object.dataLink:"javascript:void()";
+                        
+                        //<area shape="rect" coords="34,44,270,350" alt="Rectangle Area" href="https://example.com/rect">
+                        var areas = [];
+
+                        var area = document.createElement("area")
+                        area.setAttribute("shape", "poly");
+                        area.setAttribute("coords", strCoords); 
+                        area.setAttribute("alt", "Region");
+                        if(object.wantRightClickTrigger) {
+                            area.setAttribute("oncontextmenu", `event.preventDefault(); window.open('${link}', '_blank'); return false;`);
+                            area.setAttribute("href", "javascript:void()");
+                        } else {
+                            area.setAttribute("href", link);
+                        }
+                        m.append(area);
+
+                    } // canvas objects that are polyline
+                }); // canvas objects
+            })(map) // append areas to map
+
+            var style = document.createElement("style");
+            style.innerHTML = document.getElementById("output-2").innerHTML;
+            style.id = "output-2";
+
+            var captionedImg = document.createElement("div");
+            captionedImg.style.width = window.screenWidth + "px";
+            captionedImg.style.position = "relative";
+            captionedImg.append(caption, img, map);
+            
+            var authorInstructions = document.createElement("div");
+            authorInstructions.innerHTML = `<div id="ui-walkthrough-instructions" style="padding:10px; text-align:center; font-family: sans-serif;">
+                <hr style="margin: 40px auto; width: 75%;"/>
+                <div style="margin:10px auto; font-size:120%;">
+                        Need an <u>image with clickable regions</u> that navigate to different webpages?<br/>
+                        Or need <u>interactive screens to onboard new users</u> to your website in a <u>walkthrough tour</u>?
+                    </div>
+                    <div style="font-size:133%; letter-spacing:1px; margin:30px auto; ">- Get the code -</div>
+                    <div style="font-family: serif;">
+                        <b>1.</b> Right-Click → Inspect. &#9;<br/><b>2.</b> Right-Click &lt;main&gt; → Edit as HTML. &#9;<br/><b>3.</b> Copy the code to a new HTML file and remove this block of instructions.
+                    </div>
+                </div>`
+
+            var main = document.createElement("main")
+            main.style.margin = "0 auto";
+            main.style.display = "block";
+            main.style.width = "fit-content";
+            main.append(style, captionedImg);
+
+            var newWindow = window.open("about:blank");
+            newWindow.document.body.append(main, authorInstructions);
+
+        } // outputHTML
+
+        document.getElementById("output-icon").addEventListener("click", outputHTML);
+
+    </script>
+
+
+<script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.4.0/fabric.min.js"></script>
+<script src="assets/js/fabric-plug.js"></script>
 
 </body>
 
