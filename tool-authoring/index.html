@@ -138,7 +138,12 @@
                     justify-content: center;
                     align-items: center;
                 } */
-
+                #polygon-icon {
+                    transition: color 200ms ease-in;
+                }
+                #polygon-icon.active {
+                    color: red;
+                }
                 #output-icon, #link-icon {
                     font-size: 9px !important;
                 }
@@ -168,7 +173,7 @@
         <div id="author-actions">
             <span id="close-icon" class="icon" title="Cancel screen button">&times;</span>
             <span id="caption-icon" class="icon" title="Add caption button">&copy;</span>
-            <span id="polygon-icon" class="icon" title="Create region button">&#9632;</span>
+            <span id="polygon-icon" class="icon" title="Create region button" onclick="event.target.classList.toggle('active')">&#9632;</span>
             <!-- 
                 Triangle: ▲ (&#9650; for up-pointing triangle)
                 Square: ■ (&#9632;)
@@ -328,7 +333,7 @@
                 }
             });
             if(polyLineCount === 0) {
-                alert("OPPS... You need regions that the walkthrough user clicks to open a link or a new screen.\n\n1. Add a region first.\n2. Then complete that region with a double-click.");
+                alert("OPPS... You need regions that the walkthrough user clicks to open a new screen or link.\n\n1. Add a region first.\n2. Then complete that region with a double-click.");
                 return;
             }
             var shapes = [];
@@ -353,12 +358,12 @@
                 }
                 return concat;
             })()
-            var userChoice = prompt(`Choose the shape you are adding a link to in your walkthrough. For example:\n1,2,3,4...:\n\nChoices:\n${choices}`);
+            var userChoice = prompt(`Choose the region you are adding a link to in your walkthrough. For example, you enter '1' to select the first region.:\n\nChoices:\n${choices}`);
             userChoice = parseInt(userChoice);
             if(userChoice !== null && !isNaN(userChoice)) {
                 var index = userChoice - 1;
                 var shape = shapes[index];
-                var link = prompt(`Shape selected: Shape ${shape}. When the walkthrough user clicks this region, it will open what link/url:\n\n${shape}`);
+                var link = prompt(`Region selected: Region ${shape}. Enter the link to a new screen or website when the walkthrough user clicks this region:\n\n${shape}`);
             }
         })
 

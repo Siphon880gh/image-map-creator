@@ -94,6 +94,7 @@ fabric.util.addListener(window,'dblclick', function(){
      lines = [];
      lineCounter = 0;
     
+     document.querySelector("#polygon-icon.active")?.classList?.remove("active");
 });
 
 canvas.on('object:selected', function(event) {
