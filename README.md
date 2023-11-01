@@ -6,6 +6,11 @@ Learn the UI of any app/software with prepared screenshots, clickable regions, a
 
 https://chat.openai.com/c/bf1c893c-e1e6-4757-9478-75dc2b0cb012
 
+## Copywriting
+Status: Brainstorming
+
+Adding link to a part of the image that can be clicked to open a new website or another part of a walkthrough tour.
+
 ## Branding
 
 <<

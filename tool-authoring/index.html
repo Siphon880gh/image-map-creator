@@ -24,7 +24,7 @@
         }
 
         // Configurer: Configure here
-        var startingMode = STARTING.NO_SPLASH_SCREEN;
+        var startingMode = STARTING.SPLASH_SCREEN;
     </script>
     <style>
                 #canvas-tools {
@@ -319,12 +319,13 @@
                 }
                 return concat;
             })()
-            var rawUserChoice = prompt(`Choose the region you are adding a link to in your walkthrough. For example, you enter '1' to select the first region:\n\nRegion choices (xy coordinates 0,0 from top left):\n${choices}`);
-            userChoice = parseInt(rawUserChoice);
+            var rawUserChoice = prompt(`CHOOSE REGION:\nTo select the first region, for example, you enter: '1'.\n\nRIGHT-CLICK?\nIf you want right-click to open the link instead: '1 r'\n\nRegion choices (xy coordinates start top left from 0,0):\n${choices}`);
+            var wantRightClickTrigger = rawUserChoice.toLowerCase().replaceAll(/(\s){2,}/g, " ").split(" ")?.[1] === "r"; // eg. 1 r // eg 1 R
+            var userChoice = parseInt(rawUserChoice);
             if(rawUserChoice !== null && !isNaN(userChoice)) {
                 var index = userChoice - 1;
                 var regionCoords = regionsCoords[index];
-                var link = prompt(`Region selected:\nRegion ${userChoice}\n${regionCoords}\n\nEnter the link to a new screen or website when the walkthrough user clicks this region:`);
+                var link = prompt(`Region selected:\nRegion ${userChoice}\n${regionCoords}\n\nENTER LINK\nEnter link to a new screen or website when the walkthrough user interacts with this region:`);
                 if(link) {
                     //polyLineObjects[index].dataLink = link; // Fails to work
                     if(link.startsWith("www")) {
@@ -334,6 +335,7 @@
                     canvas.forEachObject(function(object) {
                         if (itr===index) {
                             object.dataLink = link;
+                            object.wantRightClickTrigger = wantRightClickTrigger;
                         }
                         itr++;
                     });
@@ -437,7 +439,7 @@
 
                         // 0,0,0,100,100,100,100,0,0,0
                         var strCoords = points.toString();
-                        var link = object.dataLink?object.dataLink:"#";
+                        var link = object.dataLink?object.dataLink:"javascript:void()";
                         
                         //<area shape="rect" coords="34,44,270,350" alt="Rectangle Area" href="https://example.com/rect">
                         var areas = [];
@@ -445,8 +447,13 @@
                         var area = document.createElement("area")
                         area.setAttribute("shape", "poly");
                         area.setAttribute("coords", strCoords); 
-                        area.setAttribute("alt", "Region");        
-                        area.setAttribute("href", link);
+                        area.setAttribute("alt", "Region");
+                        if(object.wantRightClickTrigger) {
+                            area.setAttribute("oncontextmenu", `event.preventDefault(); window.open('${link}', '_blank'); return false;`);
+                            area.setAttribute("href", "javascript:void()");
+                        } else {
+                            area.setAttribute("href", link);
+                        }
                         m.append(area);
 
                     } // canvas objects that are polyline
