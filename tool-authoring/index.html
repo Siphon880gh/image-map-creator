@@ -125,14 +125,13 @@
                 overflow: visible;
                 white-space: nowrap;
                 text-overflow: ellipsis;
-                z-index: 9;
+                z-index: 5;
                 padding: 22px 0;
             }
             .thumbnail-caption:empty {
                 display: none;
             }
         </style>
-        <!-- <output id="result"></output> -->
 
         <div id="author-actions">
             <span id="close-icon" class="icon" title="Cancel screen button">&times;</span>
@@ -149,8 +148,10 @@
             <!-- <span id="reposition-icon" title="Reposition button">&#x283F;</span> -->
         </div>
         
-        <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
-        <canvas id="canvas-tools" class="canvas"></canvas>
+        <main id="captioned-img" style="position:relative;">
+            <div class="thumbnail-caption overlay" onclick="event.target.classList.toggle('overlay');"></div>
+            <canvas id="canvas-tools" class="canvas"></canvas>
+        </main>
 
         <!-- <button id="finishPolygon">Finish Polygon</button>
         <button id="getOutput">Get Output</button> -->
@@ -352,7 +353,6 @@
             }, 3000)
 
           const files = e.target.files;
-          const output = document.querySelector("#result");
           for (let i = 0; i < files.length; i++) {
             if(i>0) break; // Only support one screen per edit
 
@@ -368,6 +368,7 @@
             img.onload = function() {
                 window.screenWidth = this.width;
                 window.screenHeight = this.height;
+                document.getElementById("captioned-img").style.width = window.screenWidth + "px";
             };
             img.src = event.target.result;
             window.imgSrc = img.src;
@@ -415,6 +416,7 @@
             var caption = document.createElement("div");
             var isOverlay = document.querySelector(".thumbnail-caption").className.includes("overlay");
             caption.className=`thumbnail-caption ${isOverlay?"overlay":""}`
+            caption.innerHTML=document.querySelector(".thumbnail-caption").innerHTML;
             // <div class="thumbnail-caption overlay"></div>
 
             var img = document.createElement("img");
