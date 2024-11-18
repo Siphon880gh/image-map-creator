@@ -12,6 +12,10 @@ Create image with clickable regions that you can add to your website.
 
 <u>Or</u> create a series of screenshots to onboard new users to your website in a walkthrough tour.
 
+## Demo
+
+[Try it out now!](https://wengindustries.com/app/image-map-creator)
+
 
 ## Extra Features
 
